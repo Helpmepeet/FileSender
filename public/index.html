@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBridge Personal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3b82f6;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #3b82f6;
+        }
+
+        /* Custom scrollbar for emoji grid if needed */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+    <div
+        class="container max-w-4xl w-full bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] flex flex-col relative">
+
+        <!-- Header / Navigation -->
+        <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10 pointer-events-none">
+            <div class="pointer-events-auto">
+                <button id="btn-back-global" class="text-slate-400 hover:text-slate-600 transition-colors hidden">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </button>
+            </div>
+            <div class="text-slate-300 font-bold text-xl select-none">QuickBridge</div>
+        </div>
+
+        <!-- Status Message Toast -->
+        <div id="status-message"
+            class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-700 px-6 py-3 rounded-full shadow-lg z-50 font-medium text-sm transition-all duration-300">
+            Error message here
+        </div>
+
+        <!-- Mode Selection View -->
+        <div id="mode-selection" class="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
+            <div class="text-center space-y-4">
+                <h1 class="text-4xl font-bold text-slate-800">Transfer Files Simply</h1>
+                <p class="text-slate-400 text-lg">Secure, fast, and peer-to-peer.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg">
+                <button id="btn-send-mode"
+                    class="group p-8 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 text-left">
+                    <div
+                        class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-paper-plane text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Send</h3>
+                    <p class="text-slate-400 text-sm">Upload and share files with a secure code.</p>
+                </button>
+
+                <button id="btn-receive-mode"
+                    class="group p-8 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all duration-300 text-left">
+                    <div
+                        class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-download text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Receive</h3>
+                    <p class="text-slate-400 text-sm">Enter a code to download files instantly.</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sender View (Split Layout) -->
+        <div id="sender-view" class="hidden flex-1 flex flex-col md:flex-row h-full">
+
+            <!-- Left Column: Upload -->
+            <div
+                class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-100 relative">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Upload File</h2>
+
+                <div id="upload-section" class="flex-1 flex flex-col">
+                    <!-- Drop Zone -->
+                    <div id="drop-zone"
+                        class="flex-1 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center p-8 group relative overflow-hidden">
+                        <input type="file" id="file-input" class="hidden">
+
+                        <div class="z-10 flex flex-col items-center text-center space-y-4">
+                            <div
+                                class="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-blue-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-slate-700 font-semibold text-lg">Click or Drag file</p>
+                                <p class="text-slate-400 text-sm mt-1">Up to 50MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Info (Hidden by default) -->
+                    <div id="file-info"
+                        class="hidden flex-1 border-2 border-solid border-blue-100 rounded-2xl bg-blue-50 p-6 flex flex-col items-center justify-center relative">
+                        <button id="btn-remove-file"
+                            class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors p-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="w-16 h-16 bg-white rounded-xl shadow-sm flex items-center justify-center mb-4">
+                            <i class="fas fa-file-alt text-2xl text-blue-500"></i>
+                        </div>
+                        <p id="file-name" class="font-semibold text-slate-800 text-center break-all max-w-full px-4">
+                            filename.pdf</p>
+                        <p id="file-size" class="text-slate-500 text-sm mt-1">2.5 MB</p>
+                    </div>
+                </div>
+
+                <!-- Waiting State -->
+                <div id="sender-waiting" class="hidden flex-1 flex flex-col items-center justify-center space-y-6">
+                    <div class="text-center">
+                        <p class="text-slate-500 mb-2">Share this code</p>
+                        <div id="code-container"
+                            class="bg-slate-100 px-8 py-4 rounded-xl cursor-pointer hover:bg-slate-200 transition-colors relative group">
+                            <span id="display-code"
+                                class="text-4xl font-mono font-bold text-slate-800 tracking-widest">123 456</span>
+                            <div id="copy-label"
+                                class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-emerald-500 font-semibold opacity-0 transition-opacity">
+                                Copied!</div>
+                            <div id="copy-icon"
+                                class="absolute top-1/2 right-[-2rem] transform -translate-y-1/2 text-slate-300 group-hover:text-blue-500 transition-colors">
+                                <i class="far fa-copy"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 text-slate-400 animate-pulse">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span class="text-sm">Waiting for receiver...</span>
+                    </div>
+                </div>
+
+                <!-- Approval State -->
+                <div id="sender-approval" class="hidden flex-1 flex flex-col items-center justify-center space-y-6">
+                    <div class="text-center">
+                        <div
+                            class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-user-check text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">Receiver Connected</h3>
+                        <p class="text-slate-500 mt-2">Verify the emoji match.</p>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-6 text-center w-full">
+                        <div id="sender-emoji" class="text-6xl mb-2 filter drop-shadow-md">🍎</div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Their Screen</p>
+                    </div>
+
+                    <div class="actions hidden flex space-x-4 w-full">
+                        <button id="btn-approve"
+                            class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-emerald-200">Approve</button>
+                        <button id="btn-reject"
+                            class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-red-200">Reject</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Security -->
+            <div class="w-full md:w-1/2 bg-slate-50/50 p-8 md:p-12 flex flex-col justify-center">
+                <div class="max-w-sm mx-auto w-full space-y-8">
+
+                    <!-- Security Toggle -->
+                    <div
+                        class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                        <div>
+                            <h3 class="font-bold text-slate-800">Verification</h3>
+                            <p class="text-xs text-slate-400">Require emoji match</p>
+                        </div>
+
+                        <!-- Custom Toggle -->
+                        <label for="security-toggle" class="flex items-center cursor-pointer relative">
+                            <input type="checkbox" id="security-toggle" class="sr-only peer" checked>
+                            <div
+                                class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Emoji Carousel -->
+                    <div id="emoji-selector" class="relative transition-all duration-300">
+                        <div class="absolute inset-0 bg-white/50 z-10 hidden" id="emoji-overlay"></div>
+                        <!-- Overlay for disabled state -->
+
+                        <div class="text-center mb-4">
+                            <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Security Emoji</p>
+                        </div>
+
+                        <div
+                            class="flex items-center justify-between bg-white rounded-3xl p-2 shadow-sm border border-slate-100 relative overflow-hidden">
+                            <!-- Glow Effect -->
+                            <div
+                                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-400/20 rounded-full blur-xl">
+                            </div>
+
+                            <button id="btn-prev-emoji"
+                                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors z-10">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+
+                            <div id="selected-emoji-display"
+                                class="text-6xl py-6 z-10 filter drop-shadow-lg transition-transform hover:scale-110 cursor-default select-none">
+                                🌮
+                            </div>
+
+                            <button id="btn-next-emoji"
+                                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors z-10">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <p class="text-center text-xs text-slate-400 mt-4">Receiver must select this emoji to download.
+                        </p>
+                    </div>
+
+                    <!-- Get Code Button -->
+                    <button id="btn-upload"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-0.5 hidden">
+                        Get Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receiver View -->
+        <div id="receiver-view"
+            class="hidden flex-1 flex flex-col items-center justify-center p-8 w-full max-w-lg mx-auto">
+            <h2 class="text-2xl font-bold text-slate-800 mb-8">Enter Code</h2>
+
+            <div id="join-section" class="w-full space-y-8">
+                <div class="flex justify-center gap-2 md:gap-4 otp-container">
+                    <input type="text"
+                        class="otp-input w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-slate-50 text-slate-800"
+                        maxlength="1" pattern="\d*" inputmode="numeric">
+                    <input type="text"
+                        class="otp-input w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-slate-50 text-slate-800"
+                        maxlength="1" pattern="\d*" inputmode="numeric">
+                    <input type="text"
+                        class="otp-input w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-slate-50 text-slate-800"
+                        maxlength="1" pattern="\d*" inputmode="numeric">
+                    <input type="text"
+                        class="otp-input w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-slate-50 text-slate-800"
+                        maxlength="1" pattern="\d*" inputmode="numeric">
+                    <input type="text"
+                        class="otp-input w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-slate-50 text-slate-800"
+                        maxlength="1" pattern="\d*" inputmode="numeric">
+                    <input type="text"
+                        class="otp-input w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-slate-50 text-slate-800"
+                        maxlength="1" pattern="\d*" inputmode="numeric">
+                </div>
+                <button id="btn-join"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-0.5">
+                    Connect
+                </button>
+            </div>
+
+            <div id="receiver-verification" class="hidden w-full space-y-6 text-center">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Security Check</h3>
+                    <p class="text-slate-500 mt-1">Tap the emoji shown on sender's screen</p>
+                </div>
+
+                <div id="emoji-grid" class="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+                    <!-- Emojis injected here -->
+                </div>
+
+                <p id="receiver-status" class="text-sm font-medium text-slate-400 animate-pulse">Waiting for
+                    selection...</p>
+            </div>
+
+            <div id="download-section" class="hidden w-full text-center space-y-6">
+                <div
+                    class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-check text-3xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Transfer Approved!</h3>
+                    <p class="text-slate-500">Your download should start automatically.</p>
+                </div>
+                <button id="btn-download"
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200 transition-all">
+                    Download Again
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+
+</html>
