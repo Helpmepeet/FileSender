@@ -157,8 +157,8 @@ function formatFileSize(bytes) {
 
 function handleFileSelect(file) {
     if (!file) return;
-    if (file.size > 50 * 1024 * 1024) {
-        showError('File is too large (Max 50MB)');
+    if (file.size > 100 * 1024 * 1024) {
+        showError('File is too large (Max 100MB)');
         return;
     }
     selectedFile = file;
