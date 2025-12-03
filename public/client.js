@@ -464,8 +464,8 @@ otpInputs.forEach((input, index) => {
 btnJoin.addEventListener('click', () => {
     const code = Array.from(otpInputs).map(input => input.value).join('');
     console.log('Joining with code:', code);
-    if (code.length !== 6) {
-        showError('Please enter a valid 6-digit code.');
+    if (code.length !== 4) {
+        showError('Please enter a valid 4-digit code.');
         return;
     }
     currentCode = code;

@@ -20,7 +20,7 @@ class SessionManager {
     generateCode() {
         let code;
         do {
-            code = Math.floor(100000 + Math.random() * 900000).toString();
+            code = Math.floor(1000 + Math.random() * 9000).toString();
         } while (this.sessions.has(code));
         return code;
     }
