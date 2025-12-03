@@ -287,7 +287,7 @@ btnUpload.addEventListener('click', async () => {
 
     // Disable button to prevent multiple clicks
     btnUpload.disabled = true;
-    btnUpload.textContent = 'Generating...';
+    btnUpload.textContent = 'Uploading...';
 
     const formData = new FormData();
     formData.append('file', selectedFile);
