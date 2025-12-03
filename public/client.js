@@ -285,112 +285,119 @@ btnUpload.addEventListener('click', async () => {
         return;
     }
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('emoji', EMOJIS[currentEmojiIndex]); // Send selected emoji
-    formData.append('securityEnabled', document.getElementById('security-toggle').checked);
+    return;
+}
 
-    try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            body: formData
-        });
+    // Disable button to prevent multiple clicks
+    btnUpload.disabled = true;
+btnUpload.textContent = 'Generating...';
 
-        if (!response.ok) throw new Error('Upload failed');
+const formData = new FormData();
+formData.append('file', selectedFile);
+formData.append('emoji', EMOJIS[currentEmojiIndex]); // Send selected emoji
+formData.append('securityEnabled', document.getElementById('security-toggle').checked);
 
-        const data = await response.json();
-        currentCode = data.code;
+try {
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
 
-        displayCode.textContent = currentCode.split('').join(' '); // Add spacing
-        uploadSection.classList.add('hidden');
-        senderWaiting.classList.remove('hidden');
+    if (!response.ok) throw new Error('Upload failed');
 
-        socket.emit('register-sender', currentCode);
+    const data = await response.json();
+    currentCode = data.code;
 
-        // Auto-copy code
-        navigator.clipboard.writeText(currentCode).then(() => {
-            showToast('Code copied to clipboard!', 'success');
+    displayCode.textContent = currentCode.split('').join(' '); // Add spacing
+    uploadSection.classList.add('hidden');
+    senderWaiting.classList.remove('hidden');
 
-            // Existing visual feedback
-            const codeContainer = document.getElementById('code-container');
+    socket.emit('register-sender', currentCode);
+
+    // Auto-copy code
+    navigator.clipboard.writeText(currentCode).then(() => {
+        showToast('Code copied to clipboard!', 'success');
+
+        // Existing visual feedback
+        const codeContainer = document.getElementById('code-container');
+        codeContainer.classList.add('copied');
+        const copyLabel = document.getElementById('copy-label');
+        copyLabel.classList.remove('hidden');
+        setTimeout(() => copyLabel.classList.add('visible'), 10);
+        setTimeout(() => {
+            codeContainer.classList.remove('copied');
+            copyLabel.classList.remove('visible');
+            setTimeout(() => copyLabel.classList.add('hidden'), 200);
+        }, 2000);
+    }).catch(err => console.error('Auto-copy failed:', err));
+
+
+
+    const codeContainer = document.getElementById('code-container');
+    const copyIcon = document.getElementById('copy-icon');
+    const copyLabel = document.getElementById('copy-label');
+
+    const COPY_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    const CHECK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    codeContainer.addEventListener('click', () => {
+        if (!currentCode) return;
+
+        // Remove spaces for copying
+        const codeToCopy = currentCode;
+        navigator.clipboard.writeText(codeToCopy).then(() => {
+            // Success State
             codeContainer.classList.add('copied');
-            const copyLabel = document.getElementById('copy-label');
+            copyIcon.innerHTML = CHECK_ICON_SVG;
             copyLabel.classList.remove('hidden');
+            // Force reflow to enable transition if needed, but class toggle handles it
             setTimeout(() => copyLabel.classList.add('visible'), 10);
+
+            // Revert after 2 seconds
             setTimeout(() => {
                 codeContainer.classList.remove('copied');
+                copyIcon.innerHTML = COPY_ICON_SVG;
                 copyLabel.classList.remove('visible');
-                setTimeout(() => copyLabel.classList.add('hidden'), 200);
-            }, 2000);
-        }).catch(err => console.error('Auto-copy failed:', err));
-
-
-
-        const codeContainer = document.getElementById('code-container');
-        const copyIcon = document.getElementById('copy-icon');
-        const copyLabel = document.getElementById('copy-label');
-
-        const COPY_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        const CHECK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-
-        codeContainer.addEventListener('click', () => {
-            if (!currentCode) return;
-
-            // Remove spaces for copying
-            const codeToCopy = currentCode;
-            navigator.clipboard.writeText(codeToCopy).then(() => {
-                // Success State
-                codeContainer.classList.add('copied');
-                copyIcon.innerHTML = CHECK_ICON_SVG;
-                copyLabel.classList.remove('hidden');
-                // Force reflow to enable transition if needed, but class toggle handles it
-                setTimeout(() => copyLabel.classList.add('visible'), 10);
-
-                // Revert after 2 seconds
-                setTimeout(() => {
-                    codeContainer.classList.remove('copied');
-                    copyIcon.innerHTML = COPY_ICON_SVG;
-                    copyLabel.classList.remove('visible');
-                    setTimeout(() => copyLabel.classList.add('hidden'), 200); // Wait for fade out
-                }, 500);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                showError('Failed to copy code');
-            });
+                setTimeout(() => copyLabel.classList.add('hidden'), 200); // Wait for fade out
+            }, 500);
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            showError('Failed to copy code');
         });
+    });
 
-        socket.on('receiver-joined', (data) => {
-            senderWaiting.classList.add('hidden');
-            senderApproval.classList.remove('hidden');
-            senderEmoji.textContent = data.emoji;
-            // Ensure buttons are hidden if verification is active (though they should be by default)
-            btnApprove.parentElement.classList.add('hidden');
-            // Wait, I need to check where btnApprove is. It's not in the HTML snippet I saw earlier.
-            // Let me check index.html again or just assume I need to add them dynamically or unhide them.
-            // Actually, I should check index.html for approval buttons.
-        });
+    socket.on('receiver-joined', (data) => {
+        senderWaiting.classList.add('hidden');
+        senderApproval.classList.remove('hidden');
+        senderEmoji.textContent = data.emoji;
+        // Ensure buttons are hidden if verification is active (though they should be by default)
+        btnApprove.parentElement.classList.add('hidden');
+        // Wait, I need to check where btnApprove is. It's not in the HTML snippet I saw earlier.
+        // Let me check index.html again or just assume I need to add them dynamically or unhide them.
+        // Actually, I should check index.html for approval buttons.
+    });
 
-        // Manual Approval Logic Removed (Auto-approve now)
-        /*
-        socket.on('receiver-joined-no-verify', () => { ... });
-        btnApprove.addEventListener('click', () => { ... });
-        btnReject.addEventListener('click', () => { ... });
-        */
+    // Manual Approval Logic Removed (Auto-approve now)
+    /*
+    socket.on('receiver-joined-no-verify', () => { ... });
+    btnApprove.addEventListener('click', () => { ... });
+    btnReject.addEventListener('click', () => { ... });
+    */
 
-        socket.on('verification-success', () => {
-            // Sender side: Verification passed or Auto-approved, transfer starting
-            senderWaiting.classList.add('hidden'); // Ensure waiting screen is hidden
-            senderApproval.classList.remove('hidden'); // Show approval screen
-            senderApproval.innerHTML = '<p>Connected! Sending file...</p>';
-            setTimeout(resetViews, 3000);
-        });
-    } catch (err) {
-    } catch (err) {
-        showError(err.message);
-        // Re-enable on error
-        btnUpload.disabled = false;
-        btnUpload.textContent = 'Get Code';
-    }
+    socket.on('verification-success', () => {
+        // Sender side: Verification passed or Auto-approved, transfer starting
+        senderWaiting.classList.add('hidden'); // Ensure waiting screen is hidden
+        senderApproval.classList.remove('hidden'); // Show approval screen
+        senderApproval.innerHTML = '<p>Connected! Sending file...</p>';
+        setTimeout(resetViews, 3000);
+    });
+} catch (err) {
+} catch (err) {
+    showError(err.message);
+    // Re-enable on error
+    btnUpload.disabled = false;
+    btnUpload.textContent = 'Get Code';
+}
 });
 
 
