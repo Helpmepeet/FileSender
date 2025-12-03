@@ -123,6 +123,8 @@ function resetFileSelection() {
     dropZone.classList.remove('hidden');
     fileInfo.classList.add('hidden');
     btnUpload.classList.add('hidden');
+    btnUpload.disabled = false; // Re-enable button
+    btnUpload.textContent = 'Get Code'; // Reset text
 }
 
 function showToast(msg, type = 'error') {
@@ -383,7 +385,11 @@ btnUpload.addEventListener('click', async () => {
             setTimeout(resetViews, 3000);
         });
     } catch (err) {
+    } catch (err) {
         showError(err.message);
+        // Re-enable on error
+        btnUpload.disabled = false;
+        btnUpload.textContent = 'Get Code';
     }
 });
 
