@@ -49,7 +49,7 @@ class SessionManager {
         return options;
     }
 
-    createSession(file, preferredEmoji = null, securityEnabled = true) {
+    createSession(type, payload, preferredEmoji = null, securityEnabled = true) {
         const code = this.generateCode();
         // Use preferred emoji if valid (in our list), otherwise generate random
         const emoji = (preferredEmoji && this.emojis.includes(preferredEmoji))
@@ -59,7 +59,8 @@ class SessionManager {
         const session = {
             code,
             emoji,
-            file,
+            type, // 'file' or 'text'
+            [type === 'file' ? 'files' : 'text']: payload, // store payload based on type
             securityEnabled,
             createdAt: Date.now(),
             status: 'waiting', // waiting, connected, transferring, completed
@@ -72,7 +73,15 @@ class SessionManager {
         setTimeout(() => {
             if (this.sessions.has(code)) {
                 console.log(`Session ${code} expired`);
-                // In a real app, we might want to trigger file deletion here if not already deleted
+                // Cleanup files if they exist
+                if (session.type === 'file' && Array.isArray(session.files)) {
+                    const fs = require('fs');
+                    session.files.forEach(file => {
+                        fs.unlink(file.path, (err) => {
+                            if (err) console.error('Error auto-cleaning file:', err);
+                        });
+                    });
+                }
                 this.sessions.delete(code);
             }
         }, 5 * 60 * 1000);

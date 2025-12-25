@@ -20,10 +20,26 @@ const btnApprove = document.getElementById('btn-approve');
 const btnReject = document.getElementById('btn-reject');
 const uploadSection = document.getElementById('upload-section');
 const dropZone = document.getElementById('drop-zone');
-const fileInfo = document.getElementById('file-info');
-const fileNameSpan = document.getElementById('file-name');
-const fileSizeSpan = document.getElementById('file-size');
-const btnRemoveFile = document.getElementById('btn-remove-file');
+// const fileInfo = document.getElementById('file-info'); // Removed
+// const fileNameSpan = document.getElementById('file-name'); // Removed
+// const fileSizeSpan = document.getElementById('file-size'); // Removed
+// const btnRemoveFile = document.getElementById('btn-remove-file'); // Removed in favor of bulk list
+
+// New Sender Elements
+const tabFile = document.getElementById('tab-file');
+const tabText = document.getElementById('tab-text');
+const viewFileInput = document.getElementById('view-file-input');
+const viewTextInput = document.getElementById('view-text-input');
+const textInput = document.getElementById('text-input');
+const fileListContainer = document.getElementById('file-list-container');
+const fileList = document.getElementById('file-list');
+const fileCountSpan = document.getElementById('file-count');
+const totalSizeSpan = document.getElementById('total-size');
+const btnClearFiles = document.getElementById('btn-clear-files');
+
+// State
+let activeTab = 'file'; // 'file' or 'text'
+let selectedFiles = []; // Array of File objects
 
 // Receiver Elements
 const otpInputs = document.querySelectorAll('.otp-input');
@@ -118,13 +134,16 @@ function resetOtpInputs() {
 }
 
 function resetFileSelection() {
-    selectedFile = null;
+    selectedFiles = [];
     fileInput.value = '';
-    dropZone.classList.remove('hidden');
-    fileInfo.classList.add('hidden');
-    btnUpload.classList.add('hidden');
+    textInput.value = '';
+    updateFileListUI();
+    // Reset drop zone visibility is handled in updateFileListUI
     btnUpload.disabled = false; // Re-enable button
     btnUpload.textContent = 'Get Code'; // Reset text
+
+    // Reset tabs
+    switchTab('file');
 }
 
 function showToast(msg, type = 'error') {
@@ -155,25 +174,127 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function handleFileSelect(file) {
-    if (!file) return;
-    if (file.size > 100 * 1024 * 1024) {
-        showError('File is too large (Max 100MB)');
+// Tab Switching logic
+function switchTab(tab) {
+    activeTab = tab;
+    if (tab === 'file') {
+        tabFile.classList.add('bg-white', 'text-slate-800', 'shadow-sm', 'font-semibold');
+        tabFile.classList.remove('text-slate-500');
+        tabText.classList.remove('bg-white', 'text-slate-800', 'shadow-sm', 'font-semibold');
+        tabText.classList.add('text-slate-500');
+
+        viewFileInput.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+        viewTextInput.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+
+        // Re-evaluate button state
+        updateUploadButtonState();
+    } else {
+        tabText.classList.add('bg-white', 'text-slate-800', 'shadow-sm', 'font-semibold');
+        tabText.classList.remove('text-slate-500');
+        tabFile.classList.remove('bg-white', 'text-slate-800', 'shadow-sm', 'font-semibold');
+        tabFile.classList.add('text-slate-500');
+
+        viewTextInput.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+        viewFileInput.classList.add('translate-x-0', 'opacity-0', 'pointer-events-none'); // Slide out
+
+        // Re-evaluate button state
+        updateUploadButtonState();
+    }
+}
+
+tabFile.addEventListener('click', () => switchTab('file'));
+tabText.addEventListener('click', () => switchTab('text'));
+
+// File Handling Logic
+function updateFileListUI() {
+    fileList.innerHTML = '';
+
+    if (selectedFiles.length === 0) {
+        fileListContainer.classList.add('hidden');
+        dropZone.classList.remove('hidden');
+        fileCountSpan.textContent = '0 Files';
+        totalSizeSpan.textContent = '0 MB';
         return;
     }
-    selectedFile = file;
-    fileNameSpan.textContent = file.name;
-    fileSizeSpan.textContent = formatFileSize(file.size);
 
     dropZone.classList.add('hidden');
-    fileInfo.classList.remove('hidden');
-    // emojiSelector.classList.remove('hidden'); // Always visible now
-    btnUpload.classList.remove('hidden');
+    fileListContainer.classList.remove('hidden');
 
-    // Randomize on new file select - REMOVED to persist user selection
-    // currentEmojiIndex = Math.floor(Math.random() * EMOJIS.length);
-    updateEmojiDisplay();
+    let totalSize = 0;
+
+    selectedFiles.forEach((file, index) => {
+        totalSize += file.size;
+
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white p-3 rounded-lg border border-slate-100';
+        div.innerHTML = `
+            <div class="flex items-center space-x-3 overflow-hidden">
+                <div class="w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-slate-700 truncate">${file.name}</p>
+                    <p class="text-xs text-slate-400">${formatFileSize(file.size)}</p>
+                </div>
+            </div>
+            <button class="text-slate-300 hover:text-red-500 transition-colors p-1" onclick="removeFile(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        fileList.appendChild(div);
+    });
+
+    fileCountSpan.textContent = `${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}`;
+    totalSizeSpan.textContent = formatFileSize(totalSize);
+
+    updateUploadButtonState();
 }
+
+// Global scope for onclick
+window.removeFile = (index) => {
+    selectedFiles.splice(index, 1);
+    updateFileListUI();
+};
+
+function handleFileSelect(files) {
+    if (!files) return;
+
+    // Add new files to existing list
+    const newFiles = Array.from(files);
+    // Filter duplicates? Maybe not necessary depending on UX, but let's just add them
+
+    // Check total size limit (100MB)
+    let currentTotalSize = selectedFiles.reduce((acc, f) => acc + f.size, 0);
+    let newTotalSize = newFiles.reduce((acc, f) => acc + f.size, 0);
+
+    if (currentTotalSize + newTotalSize > 100 * 1024 * 1024) {
+        showError('Total size cannot exceed 100MB');
+        return;
+    }
+
+    selectedFiles = [...selectedFiles, ...newFiles];
+    updateFileListUI();
+    updateEmojiDisplay(); // Refresh emoji on new activity
+}
+
+function updateUploadButtonState() {
+    if (activeTab === 'file') {
+        if (selectedFiles.length > 0) {
+            btnUpload.classList.remove('hidden');
+        } else {
+            btnUpload.classList.add('hidden');
+        }
+    } else {
+        // Text tab always shows button (checked on click)
+        btnUpload.classList.remove('hidden');
+    }
+}
+
+// Text Input Listener
+textInput.addEventListener('input', () => {
+    // Optional: Validation
+});
+
 
 btnSendMode.addEventListener('click', () => showView(senderView));
 btnReceiveMode.addEventListener('click', () => {
@@ -222,17 +343,20 @@ dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
     if (e.dataTransfer.files.length) {
-        handleFileSelect(e.dataTransfer.files[0]);
+        handleFileSelect(e.dataTransfer.files);
     }
 });
 
 fileInput.addEventListener('change', () => {
     if (fileInput.files.length) {
-        handleFileSelect(fileInput.files[0]);
+        handleFileSelect(fileInput.files);
     }
 });
 
-btnRemoveFile.addEventListener('click', resetFileSelection);
+btnClearFiles.addEventListener('click', () => {
+    selectedFiles = [];
+    updateFileListUI();
+});
 
 // Emoji Selection Logic
 // The "Perfect 9" matching backend
@@ -280,19 +404,34 @@ securityToggle.addEventListener('change', updateSecurityState);
 
 // Sender Logic
 btnUpload.addEventListener('click', async () => {
-    if (!selectedFile) {
-        showError('Please select a file first.');
-        return;
+    const formData = new FormData();
+    const securityEnabled = document.getElementById('security-toggle').checked;
+
+    if (activeTab === 'file') {
+        if (selectedFiles.length === 0) {
+            showError('Please select at least one file.');
+            return;
+        }
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
+        formData.append('type', 'file');
+    } else {
+        const textContent = textInput.value.trim();
+        if (!textContent) {
+            showError('Please enter some text.');
+            return;
+        }
+        formData.append('text', textContent);
+        formData.append('type', 'text');
     }
 
     // Disable button to prevent multiple clicks
     btnUpload.disabled = true;
     btnUpload.textContent = 'Uploading...';
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
     formData.append('emoji', EMOJIS[currentEmojiIndex]); // Send selected emoji
-    formData.append('securityEnabled', document.getElementById('security-toggle').checked);
+    formData.append('securityEnabled', securityEnabled);
 
     try {
         const response = await fetch('/upload', {
@@ -477,29 +616,138 @@ btnJoin.addEventListener('click', () => {
 // Duplicate listeners removed
 
 
-socket.on('transfer-approved', () => {
+socket.on('transfer-approved', (data) => {
     receiverVerification.classList.add('hidden');
     downloadSection.classList.remove('hidden');
 
-    // Auto download
-    const downloadUrl = `/download/${currentCode}`;
-    window.location.href = downloadUrl;
+    // Fetch session metadata to render UI correctly
+    fetch(`/session/${currentCode}/metadata`)
+        .then(res => res.json())
+        .then(metadata => {
+            const type = metadata.type;
+            const p = downloadSection.querySelector('#success-message');
+            const textContentView = document.getElementById('text-content-view');
+            const btnDownload = document.getElementById('btn-download');
+            const receiverFileList = document.getElementById('receiver-file-list');
 
-    // Update UI
-    const p = downloadSection.querySelector('p');
-    if (p) p.textContent = 'Downloading file...';
+            // Track downloaded files
+            const downloadedFiles = new Set();
+            const totalFiles = metadata.files ? metadata.files.length : 0;
 
-    // Fallback button
-    btnDownload.textContent = 'Download Again';
-    btnDownload.onclick = () => {
-        window.location.href = downloadUrl;
-    };
+            // Reset UI
+            textContentView.classList.add('hidden');
+            receiverFileList.classList.add('hidden');
+            btnDownload.classList.remove('hidden');
 
-    // Reset after delay
-    setTimeout(() => {
-        resetViews();
-    }, 5000);
+            if (type === 'text') {
+                p.textContent = 'Text received successfully!';
+                textContentView.classList.remove('hidden');
+                document.getElementById('received-text').value = metadata.text;
+                btnDownload.classList.add('hidden'); // Hide download button for text
+
+                // Copy Text Logic
+                const btnCopy = document.getElementById('btn-copy-text');
+                // Remove old listener to avoid duplicates if re-rendering
+                const newBtnCopy = btnCopy.cloneNode(true);
+                btnCopy.parentNode.replaceChild(newBtnCopy, btnCopy);
+
+                newBtnCopy.onclick = () => {
+                    const text = document.getElementById('received-text').value;
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('Text copied!', 'success');
+                        // Signal completion for text
+                        socket.emit('complete-session', currentCode);
+                        setTimeout(() => {
+                            resetViews();
+                        }, 1500);
+                    });
+                };
+            } else {
+                // FILE MODE
+                const files = metadata.files || [];
+
+                if (files.length === 1) {
+                    // Single File Mode - cleaner UI
+                    p.textContent = 'File received: ' + files[0].name;
+                    btnDownload.textContent = 'Download File';
+                    btnDownload.onclick = () => {
+                        window.location.href = `/download/${currentCode}`;
+                    };
+                } else {
+                    // Multi File Mode - List + Zip
+                    p.textContent = `${files.length} Files Received`;
+                    receiverFileList.classList.remove('hidden');
+                    receiverFileList.innerHTML = '';
+
+                    files.forEach((file, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100';
+                        div.innerHTML = `
+                            <div class="flex items-center space-x-3 overflow-hidden">
+                                <div class="w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-slate-700 truncate">${file.name}</p>
+                                    <p class="text-xs text-slate-400">${formatFileSize(file.size)}</p>
+                                </div>
+                            </div>
+                            <button id="btn-dl-${index}" class="text-blue-500 hover:text-blue-700 font-semibold text-sm px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 transition-colors">
+                                Download
+                            </button>
+                        `;
+                        receiverFileList.appendChild(div);
+
+                        // Individual Download Listener
+                        document.getElementById(`btn-dl-${index}`).onclick = () => {
+                            downloadSingleFile(index);
+                            downloadedFiles.add(index);
+
+                            // Check if all files downloaded
+                            if (downloadedFiles.size === totalFiles) {
+                                // Add delay to ensure download request reaches server
+                                setTimeout(() => {
+                                    socket.emit('complete-session', currentCode);
+                                    setTimeout(() => {
+                                        resetViews();
+                                    }, 1500);
+                                }, 1000);
+                            }
+                        };
+                    });
+
+                    btnDownload.textContent = 'Download All';
+                    btnDownload.onclick = () => {
+                        // Disable button
+                        btnDownload.disabled = true;
+                        btnDownload.textContent = 'Downloading...';
+
+                        // Download each file individually with a small delay
+                        files.forEach((file, index) => {
+                            setTimeout(() => {
+                                downloadSingleFile(index);
+                            }, index * 500); // 500ms delay between downloads
+                        });
+
+                        // Signal completion after last download triggered
+                        setTimeout(() => {
+                            socket.emit('complete-session', currentCode);
+                            resetViews();
+                        }, files.length * 500 + 1000);
+                    };
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Metadata fetch error:', err);
+            showError('Failed to load session details');
+        });
 });
+
+// Helper for single file download
+window.downloadSingleFile = (index) => {
+    window.location.href = `/download/${currentCode}?index=${index}`;
+};
 
 socket.on('transfer-rejected', () => {
     showError('Transfer request was rejected by the sender.');
