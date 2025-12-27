@@ -21,6 +21,11 @@ const upload = multer({
 app.use(express.static('public'));
 app.use(express.json());
 
+// Health Check Endpoint (Keep-Alive)
+app.get('/health', (req, res) => {
+    res.status(200).send('ok');
+});
+
 // Upload Endpoint
 app.post('/upload', upload.array('files'), (req, res) => { // Changed to array
     const type = req.body.type || 'file'; // 'file' or 'text'
