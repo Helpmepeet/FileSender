@@ -15,7 +15,7 @@ Often, when you need to print something at a shop, you have to log in to your pe
 - The app generates a **4-digit PIN**.
 
 ### 2. Download (at the print shop)
-- Go to `bit.ly/ptFile` (or your application URL).
+- Go to `[bit.ly/ptFile](https://bit.ly/ptFile)` or `https://filesender-2iwa.onrender.com/` 
 - Enter the **4-digit PIN**.
 - The file downloads instantly!
 
