@@ -1,4 +1,4 @@
-<img width="469" height="472" alt="image" src="https://github.com/user-attachments/assets/a2a138ca-7586-4f3a-a1fb-ae9512d182d2" /># FileSender
+
 
 ## Project Overview
 This project was **vibe coded by Antigravity**  to solve a specific personal problem: **printing documents at a print shop.**
