@@ -1,11 +1,13 @@
-# FileSender
+<img width="469" height="472" alt="image" src="https://github.com/user-attachments/assets/a2a138ca-7586-4f3a-a1fb-ae9512d182d2" /># FileSender
 
 ## Project Overview
-This project was **vibe coded by Antigravity** 🚀 to solve a specific personal problem: **printing documents at a print shop.**
+This project was **vibe coded by Antigravity**  to solve a specific personal problem: **printing documents at a print shop.**
 
 Often, when you need to print something at a shop, you have to log in to your personal Email or LINE account on their public computer to download the file. This is both inconvenient and a security risk (leaving sessions open, keyloggers, etc.).
 
 **FileSender** solves this by letting you transfer files via a browser *without* logging in.
+
+<img width="1505" height="867" alt="image" src="https://github.com/user-attachments/assets/f150ae89-d42d-45c5-87ed-f40218a32d85" />
 
 ## How It Works
 
@@ -13,11 +15,13 @@ Often, when you need to print something at a shop, you have to log in to your pe
 - Open the application.
 - Select your file and click **"Get Code"**.
 - The app generates a **4-digit PIN**.
+<img width="1499" height="859" alt="image" src="https://github.com/user-attachments/assets/5ceef29b-70c1-4acd-b20d-c726ac970551" />
 
 ### 2. Download (at the print shop)
-- Go to `[bit.ly/ptFile](https://bit.ly/ptFile)` or `https://filesender-2iwa.onrender.com/` 
+- Go to `https://bit.ly/ptFile` or `https://filesender-2iwa.onrender.com/` 
 - Enter the **4-digit PIN**.
 - The file downloads instantly!
+<img width="1504" height="865" alt="image" src="https://github.com/user-attachments/assets/de614c32-3b28-40ef-9917-2e3585a5ce2c" />
 
 ## Deployment
 This project is deployed to **Render**.
