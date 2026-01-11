@@ -43,3 +43,6 @@ Since this project handles personal files, security is a priority:
     *   To prevent random people from guessing your 4-digit code, you can enable **"Security Mode"**.
     *   This forces the receiver to match a secret Emoji chosen by the sender before the download can start.
     *   It acts like a visual password to ensure the person downloading is the intended recipient.
+
+<img width="1510" height="874" alt="image" src="https://github.com/user-attachments/assets/3a558655-f306-4299-b426-8395e00bf4eb" />
+
