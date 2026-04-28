@@ -52,3 +52,32 @@
 .emoji-btn:active {
     transform: scale(0.95);
 }
+
+@media (max-width: 767px) {
+    body {
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .container {
+        min-height: calc(100dvh - 1rem);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    #sender-view {
+        height: auto;
+    }
+
+    #sender-view>div,
+    #receiver-view {
+        justify-content: flex-start;
+        padding-top: 5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    #upload-section {
+        min-height: 20rem;
+        overflow: visible;
+    }
+}
