@@ -11,6 +11,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const archiver = require('archiver');
+const MAX_TOTAL_UPLOAD_SIZE = 100 * 1024 * 1024;
 
 // Configure Multer for file uploads
 const upload = multer({
@@ -38,6 +39,13 @@ app.post('/upload', upload.array('files'), (req, res) => { // Changed to array
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'No files uploaded' });
         }
+
+        const totalUploadSize = req.files.reduce((sum, file) => sum + file.size, 0);
+        if (totalUploadSize > MAX_TOTAL_UPLOAD_SIZE) {
+            deleteUploadedFiles(req.files);
+            return res.status(400).json({ error: 'Total size cannot exceed 100MB' });
+        }
+
         payload = req.files;
     } else if (type === 'text') {
         if (!req.body.text) {
@@ -58,11 +66,13 @@ app.get('/session/:code/metadata', (req, res) => {
     const session = sessionManager.getSession(code);
 
     if (!session) return res.status(404).json({ error: 'Session not found' });
+    if (session.status !== 'approved') {
+        return res.status(403).json({ error: 'Transfer not approved' });
+    }
 
-    // Only return safe metadata
+    // Only return metadata needed after approval.
     const metadata = {
         type: session.type,
-        emoji: session.emoji,
         // Map files to be safe objects if they exist
         files: session.files ? session.files.map((f, i) => ({
             name: f.originalname,
@@ -149,14 +159,20 @@ app.get('/download/:code', (req, res) => {
     }
 });
 
+function deleteUploadedFiles(files) {
+    if (!Array.isArray(files)) return;
+
+    files.forEach(file => {
+        fs.unlink(file.path, (unlinkErr) => {
+            if (unlinkErr) console.error('Error deleting file:', unlinkErr);
+        });
+    });
+}
+
 function cleanupSession(session) {
     sessionManager.removeSession(session.code);
     if (session.type === 'file' && session.files) {
-        session.files.forEach(file => {
-            fs.unlink(file.path, (unlinkErr) => {
-                if (unlinkErr) console.error('Error deleting file:', unlinkErr);
-            });
-        });
+        deleteUploadedFiles(session.files);
     }
 }
 
@@ -218,6 +234,20 @@ io.on('connection', (socket) => {
 
                 console.log(`Session ${code} verified and auto-approved`);
             } else {
+                session.verificationAttempts += 1;
+
+                if (session.verificationAttempts >= session.maxVerificationAttempts) {
+                    io.to(session.senderSocketId).emit('error', {
+                        message: 'Session expired after too many failed verification attempts'
+                    });
+                    socket.emit('error', {
+                        message: 'Too many failed verification attempts. Please ask the sender to create a new code.'
+                    });
+                    cleanupSession(session);
+                    console.log(`Session ${code} expired after too many failed verification attempts`);
+                    return;
+                }
+
                 // Wrong!
                 socket.emit('verification-failed');
                 console.log(`Session ${code} failed verification`);
@@ -241,11 +271,7 @@ io.on('connection', (socket) => {
             sessionManager.removeSession(code);
             // Delete files
             if (session.type === 'file' && session.files) {
-                session.files.forEach(file => {
-                    fs.unlink(file.path, (unlinkErr) => {
-                        if (unlinkErr) console.error('Error deleting file:', unlinkErr);
-                    });
-                });
+                deleteUploadedFiles(session.files);
             }
             console.log(`Session ${code} rejected`);
         }
@@ -261,11 +287,7 @@ io.on('connection', (socket) => {
             sessionManager.removeSession(code);
             // Delete files
             if (session.type === 'file' && session.files) {
-                session.files.forEach(file => {
-                    fs.unlink(file.path, (unlinkErr) => {
-                        if (unlinkErr) console.error('Error deleting file:', unlinkErr);
-                    });
-                });
+                deleteUploadedFiles(session.files);
             }
             console.log(`Session ${code} completed and cleaned up`);
         }

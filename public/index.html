@@ -54,8 +54,8 @@
         <!-- Mode Selection View -->
         <div id="mode-selection" class="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
             <div class="text-center space-y-4">
-                <h1 class="text-4xl font-bold text-slate-800">Transfer Files Simply</h1>
-                <p class="text-slate-400 text-lg">Secure, fast, and peer-to-peer.</p>
+                <h1 class="text-4xl font-bold text-slate-800">Send files fast</h1>
+                <p class="text-slate-400 text-lg">Fast temporary transfer.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full max-w-lg">
@@ -66,7 +66,7 @@
                         <i class="fas fa-paper-plane text-xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-slate-800 mb-2">Send</h3>
-                    <p class="text-slate-400 text-sm">Upload and share files with a secure code.</p>
+                    <p class="text-slate-400 text-sm">Upload and get a code.</p>
                 </button>
 
                 <button id="btn-receive-mode"
@@ -76,7 +76,7 @@
                         <i class="fas fa-download text-xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-slate-800 mb-2">Receive</h3>
-                    <p class="text-slate-400 text-sm">Enter a code to download files instantly.</p>
+                    <p class="text-slate-400 text-sm">Enter a code to download.</p>
                 </button>
             </div>
         </div>
@@ -87,7 +87,7 @@
             <!-- Left Column: Upload -->
             <div
                 class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-100 relative">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Send Content</h2>
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Send</h2>
 
                 <!-- Tabs -->
                 <div class="flex space-x-1 bg-slate-100 p-1 rounded-xl mb-6">
@@ -115,8 +115,8 @@
                                     <i class="fas fa-cloud-upload-alt text-3xl text-blue-500"></i>
                                 </div>
                                 <div>
-                                    <p class="text-slate-700 font-semibold text-lg">Tap or Drag files</p>
-                                    <p class="text-slate-400 text-sm mt-1">Up to 100MB Total</p>
+                                    <p class="text-slate-700 font-semibold text-lg">Tap or drag files</p>
+                                    <p class="text-slate-400 text-sm mt-1">Up to 100 MB</p>
                                 </div>
                             </div>
                         </div>
@@ -169,9 +169,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2 text-slate-400 animate-pulse">
+                        <div class="flex items-center space-x-2 text-slate-400 animate-pulse">
                         <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span class="text-sm">Waiting for receiver...</span>
+                            <span class="text-sm">Waiting...</span>
                     </div>
                 </div>
 
@@ -182,8 +182,8 @@
                             class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-user-check text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-800">Receiver Connected</h3>
-                        <p class="text-slate-500 mt-2">Verify the emoji match.</p>
+                        <h3 class="text-xl font-bold text-slate-800">Receiver connected</h3>
+                        <p class="text-slate-500 mt-2">Match the emoji.</p>
                     </div>
 
                     <div class="bg-slate-50 rounded-2xl p-6 text-center w-full">
@@ -209,7 +209,7 @@
                         class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                         <div>
                             <h3 class="font-bold text-slate-800">Verification</h3>
-                            <p class="text-xs text-slate-400">Require emoji match</p>
+                            <p class="text-xs text-slate-400">Match emoji before download</p>
                         </div>
 
                         <!-- Custom Toggle -->
@@ -227,7 +227,7 @@
                         <!-- Overlay for disabled state -->
 
                         <div class="text-center mb-4">
-                            <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Security Emoji</p>
+                            <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Verification emoji</p>
                         </div>
 
                         <div
@@ -252,7 +252,7 @@
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
-                        <p class="text-center text-xs text-slate-400 mt-4">Receiver must select this emoji to download.
+                        <p class="text-center text-xs text-slate-400 mt-4">Receiver must match this emoji.
                         </p>
                     </div>
 
@@ -268,7 +268,7 @@
         <!-- Receiver View -->
         <div id="receiver-view"
             class="hidden flex-1 flex flex-col items-center justify-center p-8 w-full max-w-lg mx-auto">
-            <h2 class="text-2xl font-bold text-slate-800 mb-8">Enter Code</h2>
+            <h2 class="text-2xl font-bold text-slate-800 mb-8">Enter code</h2>
 
             <div id="join-section" class="w-full space-y-8">
                 <div class="flex justify-center gap-2 md:gap-4 otp-container">
@@ -287,14 +287,14 @@
                 </div>
                 <button id="btn-join"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-0.5">
-                    Connect
+                    Join
                 </button>
             </div>
 
             <div id="receiver-verification" class="hidden w-full space-y-6 text-center">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-800">Security Check</h3>
-                    <p class="text-slate-500 mt-1">Tap the emoji shown on sender's screen</p>
+                    <h3 class="text-xl font-bold text-slate-800">Match the emoji</h3>
+                    <p class="text-slate-500 mt-1">Tap the emoji on the sender's screen</p>
                 </div>
 
                 <div id="emoji-grid" class="grid grid-cols-3 gap-4 max-w-xs mx-auto">
@@ -311,8 +311,8 @@
                     <i class="fas fa-check text-3xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-slate-800">Transfer Approved!</h3>
-                    <p class="text-slate-500" id="success-message">Your download should start automatically.</p>
+                        <h3 class="text-xl font-bold text-slate-800">Ready</h3>
+                        <p class="text-slate-500" id="success-message">Download is ready.</p>
                 </div>
 
                 <!-- Text Content View -->
@@ -329,7 +329,7 @@
 
                 <button id="btn-download"
                     class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200 transition-all">
-                    Download All (Zip)
+                    Download all
                 </button>
 
                 <!-- File List for Receiver -->

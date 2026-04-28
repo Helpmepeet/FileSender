@@ -64,6 +64,8 @@ class SessionManager {
             securityEnabled,
             createdAt: Date.now(),
             status: 'waiting', // waiting, connected, transferring, completed
+            verificationAttempts: 0,
+            maxVerificationAttempts: 3,
             senderSocketId: null,
             receiverSocketId: null
         };

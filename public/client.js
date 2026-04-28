@@ -122,7 +122,7 @@ function resetViews() {
     receiverVerification.classList.add('hidden');
     downloadSection.classList.add('hidden');
     currentCode = null; // Clear current code
-    document.getElementById('receiver-status').textContent = 'Waiting for selection...'; // Reset status text
+    document.getElementById('receiver-status').textContent = 'Choose an emoji'; // Reset status text
 
     statusMessage.classList.add('hidden');
     currentCode = null;
@@ -140,7 +140,7 @@ function resetFileSelection() {
     updateFileListUI();
     // Reset drop zone visibility is handled in updateFileListUI
     btnUpload.disabled = false; // Re-enable button
-    btnUpload.textContent = 'Get Code'; // Reset text
+    btnUpload.textContent = 'Get code'; // Reset text
 
     // Reset tabs
     switchTab('file');
@@ -212,7 +212,7 @@ function updateFileListUI() {
     if (selectedFiles.length === 0) {
         fileListContainer.classList.add('hidden');
         dropZone.classList.remove('hidden');
-        fileCountSpan.textContent = '0 Files';
+        fileCountSpan.textContent = '0 files';
         totalSizeSpan.textContent = '0 MB';
         return;
     }
@@ -268,7 +268,7 @@ function handleFileSelect(files) {
     let newTotalSize = newFiles.reduce((acc, f) => acc + f.size, 0);
 
     if (currentTotalSize + newTotalSize > 100 * 1024 * 1024) {
-        showError('Total size cannot exceed 100MB');
+        showError('Max total size is 100 MB');
         return;
     }
 
@@ -305,7 +305,7 @@ btnReceiveMode.addEventListener('click', () => {
     receiverVerification.classList.add('hidden');
     downloadSection.classList.add('hidden');
     currentCode = null;
-    document.getElementById('receiver-status').textContent = 'Waiting for selection...';
+    document.getElementById('receiver-status').textContent = 'Choose an emoji';
 
     showView(receiverView);
     showView(receiverView);
@@ -409,7 +409,7 @@ btnUpload.addEventListener('click', async () => {
 
     if (activeTab === 'file') {
         if (selectedFiles.length === 0) {
-            showError('Please select at least one file.');
+            showError('Select at least one file.');
             return;
         }
         selectedFiles.forEach(file => {
@@ -419,7 +419,7 @@ btnUpload.addEventListener('click', async () => {
     } else {
         const textContent = textInput.value.trim();
         if (!textContent) {
-            showError('Please enter some text.');
+            showError('Enter some text.');
             return;
         }
         formData.append('text', textContent);
@@ -531,21 +531,21 @@ btnUpload.addEventListener('click', async () => {
         showError(err.message);
         // Re-enable on error
         btnUpload.disabled = false;
-        btnUpload.textContent = 'Get Code';
+        btnUpload.textContent = 'Get code';
     }
 });
 
 
 
 socket.on('verification-success', () => {
-    document.getElementById('receiver-status').textContent = 'Verified! Waiting for approval...';
+    document.getElementById('receiver-status').textContent = 'Verified';
 });
 
 socket.on('waiting-for-approval', () => {
     receiverVerification.classList.remove('hidden');
     joinSection.classList.add('hidden');
     document.getElementById('emoji-grid').innerHTML = ''; // Clear grid
-    document.getElementById('receiver-status').textContent = 'Waiting for sender approval...';
+    document.getElementById('receiver-status').textContent = 'Waiting for sender...';
 
     // Hide instructions
     const ps = receiverVerification.querySelectorAll('p:not(.status-text)');
@@ -553,7 +553,7 @@ socket.on('waiting-for-approval', () => {
 });
 
 socket.on('verification-failed', () => {
-    showError('Wrong emoji! Connection terminated.');
+    showError('Wrong emoji.');
     setTimeout(resetViews, 3000);
 });
 
@@ -604,7 +604,7 @@ btnJoin.addEventListener('click', () => {
     const code = Array.from(otpInputs).map(input => input.value).join('');
     console.log('Joining with code:', code);
     if (code.length !== 4) {
-        showError('Please enter a valid 4-digit code.');
+        showError('Enter a 4-digit code.');
         return;
     }
     currentCode = code;
@@ -640,7 +640,7 @@ socket.on('transfer-approved', (data) => {
             btnDownload.classList.remove('hidden');
 
             if (type === 'text') {
-                p.textContent = 'Text received successfully!';
+                p.textContent = 'Text is ready.';
                 textContentView.classList.remove('hidden');
                 document.getElementById('received-text').value = metadata.text;
                 btnDownload.classList.add('hidden'); // Hide download button for text
@@ -668,14 +668,14 @@ socket.on('transfer-approved', (data) => {
 
                 if (files.length === 1) {
                     // Single File Mode - cleaner UI
-                    p.textContent = 'File received: ' + files[0].name;
-                    btnDownload.textContent = 'Download File';
+                    p.textContent = 'Ready: ' + files[0].name;
+                    btnDownload.textContent = 'Download';
                     btnDownload.onclick = () => {
                         window.location.href = `/download/${currentCode}`;
                     };
                 } else {
                     // Multi File Mode - List + Zip
-                    p.textContent = `${files.length} Files Received`;
+                    p.textContent = `${files.length} files ready`;
                     receiverFileList.classList.remove('hidden');
                     receiverFileList.innerHTML = '';
 
@@ -716,7 +716,7 @@ socket.on('transfer-approved', (data) => {
                         };
                     });
 
-                    btnDownload.textContent = 'Download All';
+                    btnDownload.textContent = 'Download all';
                     btnDownload.onclick = () => {
                         // Disable button
                         btnDownload.disabled = true;
@@ -740,7 +740,7 @@ socket.on('transfer-approved', (data) => {
         })
         .catch(err => {
             console.error('Metadata fetch error:', err);
-            showError('Failed to load session details');
+            showError('Could not load transfer.');
         });
 });
 
@@ -750,7 +750,7 @@ window.downloadSingleFile = (index) => {
 };
 
 socket.on('transfer-rejected', () => {
-    showError('Transfer request was rejected by the sender.');
+    showError('Sender rejected the transfer.');
     setTimeout(resetViews, 3000);
 });
 
