@@ -14,8 +14,8 @@
   "type": "commonjs",
   "dependencies": {
     "archiver": "^7.0.1",
-    "express": "^5.1.0",
-    "multer": "^2.0.2",
-    "socket.io": "^4.8.1"
+    "express": "^5.2.1",
+    "multer": "^2.3.0",
+    "socket.io": "^4.8.3"
   }
 }

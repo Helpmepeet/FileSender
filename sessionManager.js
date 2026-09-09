@@ -20,13 +20,13 @@ class SessionManager {
     generateCode() {
         let code;
         do {
-            code = Math.floor(1000 + Math.random() * 9000).toString();
+            code = crypto.randomInt(1000, 10000).toString();
         } while (this.sessions.has(code));
         return code;
     }
 
     generateEmoji() {
-        return this.emojis[Math.floor(Math.random() * this.emojis.length)];
+        return this.emojis[crypto.randomInt(0, this.emojis.length)];
     }
 
     generateVerificationOptions(correctEmoji) {
@@ -34,7 +34,7 @@ class SessionManager {
         const decoys = this.emojis.filter(e => e !== correctEmoji);
         // Shuffle decoys
         for (let i = decoys.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = crypto.randomInt(0, i + 1);
             [decoys[i], decoys[j]] = [decoys[j], decoys[i]];
         }
         // Take 8 decoys
@@ -43,7 +43,7 @@ class SessionManager {
         options.push(correctEmoji);
         // Shuffle options
         for (let i = options.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = crypto.randomInt(0, i + 1);
             [options[i], options[j]] = [options[j], options[i]];
         }
         return options;

@@ -20,10 +20,6 @@ const btnApprove = document.getElementById('btn-approve');
 const btnReject = document.getElementById('btn-reject');
 const uploadSection = document.getElementById('upload-section');
 const dropZone = document.getElementById('drop-zone');
-// const fileInfo = document.getElementById('file-info'); // Removed
-// const fileNameSpan = document.getElementById('file-name'); // Removed
-// const fileSizeSpan = document.getElementById('file-size'); // Removed
-// const btnRemoveFile = document.getElementById('btn-remove-file'); // Removed in favor of bulk list
 
 // New Sender Elements
 const tabFile = document.getElementById('tab-file');
@@ -50,8 +46,6 @@ const receiverVerification = document.getElementById('receiver-verification');
 const downloadSection = document.getElementById('download-section');
 const btnDownload = document.getElementById('btn-download');
 const joinSection = document.getElementById('join-section');
-
-// ... (skipping unchanged parts)
 
 socket.on('verification-options', (data) => {
     console.log('Received verification options:', data);
@@ -90,7 +84,6 @@ socket.on('verification-options', (data) => {
 });
 
 let currentCode = null;
-let selectedFile = null;
 
 // Navigation
 function showView(view) {
@@ -227,20 +220,36 @@ function updateFileListUI() {
 
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between bg-white p-3 rounded-lg border border-slate-100';
-        div.innerHTML = `
-            <div class="flex items-center space-x-3 overflow-hidden">
-                <div class="w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-file"></i>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-700 truncate">${file.name}</p>
-                    <p class="text-xs text-slate-400">${formatFileSize(file.size)}</p>
-                </div>
-            </div>
-            <button class="text-slate-300 hover:text-red-500 transition-colors p-1" onclick="removeFile(${index})">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+
+        const fileDetails = document.createElement('div');
+        fileDetails.className = 'flex items-center space-x-3 overflow-hidden';
+
+        const fileIconContainer = document.createElement('div');
+        fileIconContainer.className = 'w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0';
+        const fileIcon = document.createElement('i');
+        fileIcon.className = 'fas fa-file';
+        fileIconContainer.appendChild(fileIcon);
+
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'min-w-0';
+        const fileName = document.createElement('p');
+        fileName.className = 'text-sm font-medium text-slate-700 truncate';
+        fileName.textContent = file.name;
+        const fileSize = document.createElement('p');
+        fileSize.className = 'text-xs text-slate-400';
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.append(fileName, fileSize);
+
+        fileDetails.append(fileIconContainer, fileInfo);
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'text-slate-300 hover:text-red-500 transition-colors p-1';
+        removeButton.onclick = () => window.removeFile(index);
+        const removeIcon = document.createElement('i');
+        removeIcon.className = 'fas fa-times';
+        removeButton.appendChild(removeIcon);
+
+        div.append(fileDetails, removeButton);
         fileList.appendChild(div);
     });
 
@@ -307,7 +316,6 @@ btnReceiveMode.addEventListener('click', () => {
     currentCode = null;
     document.getElementById('receiver-status').textContent = 'Choose an emoji';
 
-    showView(receiverView);
     showView(receiverView);
 
     // Robust auto-focus strategy
@@ -506,19 +514,8 @@ btnUpload.addEventListener('click', async () => {
             senderWaiting.classList.add('hidden');
             senderApproval.classList.remove('hidden');
             senderEmoji.textContent = data.emoji;
-            // Ensure buttons are hidden if verification is active (though they should be by default)
             btnApprove.parentElement.classList.add('hidden');
-            // Wait, I need to check where btnApprove is. It's not in the HTML snippet I saw earlier.
-            // Let me check index.html again or just assume I need to add them dynamically or unhide them.
-            // Actually, I should check index.html for approval buttons.
         });
-
-        // Manual Approval Logic Removed (Auto-approve now)
-        /*
-        socket.on('receiver-joined-no-verify', () => { ... });
-        btnApprove.addEventListener('click', () => { ... });
-        btnReject.addEventListener('click', () => { ... });
-        */
 
         socket.on('verification-success', () => {
             // Sender side: Verification passed or Auto-approved, transfer starting
@@ -682,24 +679,38 @@ socket.on('transfer-approved', (data) => {
                     files.forEach((file, index) => {
                         const div = document.createElement('div');
                         div.className = 'flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100';
-                        div.innerHTML = `
-                            <div class="flex items-center space-x-3 overflow-hidden">
-                                <div class="w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0">
-                                    <i class="fas fa-file"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-sm font-medium text-slate-700 truncate">${file.name}</p>
-                                    <p class="text-xs text-slate-400">${formatFileSize(file.size)}</p>
-                                </div>
-                            </div>
-                            <button id="btn-dl-${index}" class="text-blue-500 hover:text-blue-700 font-semibold text-sm px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 transition-colors">
-                                Download
-                            </button>
-                        `;
+
+                        const fileDetails = document.createElement('div');
+                        fileDetails.className = 'flex items-center space-x-3 overflow-hidden';
+
+                        const fileIconContainer = document.createElement('div');
+                        fileIconContainer.className = 'w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0';
+                        const fileIcon = document.createElement('i');
+                        fileIcon.className = 'fas fa-file';
+                        fileIconContainer.appendChild(fileIcon);
+
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'min-w-0';
+                        const fileName = document.createElement('p');
+                        fileName.className = 'text-sm font-medium text-slate-700 truncate';
+                        fileName.textContent = file.name;
+                        const fileSize = document.createElement('p');
+                        fileSize.className = 'text-xs text-slate-400';
+                        fileSize.textContent = formatFileSize(file.size);
+                        fileInfo.append(fileName, fileSize);
+
+                        fileDetails.append(fileIconContainer, fileInfo);
+
+                        const downloadButton = document.createElement('button');
+                        downloadButton.id = `btn-dl-${index}`;
+                        downloadButton.className = 'text-blue-500 hover:text-blue-700 font-semibold text-sm px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 transition-colors';
+                        downloadButton.textContent = 'Download';
+
+                        div.append(fileDetails, downloadButton);
                         receiverFileList.appendChild(div);
 
                         // Individual Download Listener
-                        document.getElementById(`btn-dl-${index}`).onclick = () => {
+                        downloadButton.onclick = () => {
                             downloadSingleFile(index);
                             downloadedFiles.add(index);
 
