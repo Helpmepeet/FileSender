@@ -152,27 +152,18 @@
                     </div>
                 </div>
 
-                <!-- Waiting State -->
-                <div id="sender-waiting" class="hidden flex-1 flex flex-col items-center justify-center space-y-6">
-                    <div class="text-center">
-                        <p class="text-slate-500 mb-2">Share this code</p>
-                        <div id="code-container"
-                            class="bg-slate-100 px-8 py-4 rounded-xl cursor-pointer hover:bg-slate-200 transition-colors relative group">
-                            <span id="display-code"
-                                class="text-4xl font-mono font-bold text-slate-800 tracking-widest">123 456</span>
-                            <div id="copy-label"
-                                class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-emerald-500 font-semibold opacity-0 transition-opacity">
-                                Copied!</div>
-                            <div id="copy-icon"
-                                class="absolute top-1/2 right-[-2rem] transform -translate-y-1/2 text-slate-300 group-hover:text-blue-500 transition-colors">
-                                <i class="far fa-copy"></i>
-                            </div>
-                        </div>
+                <!-- Active transfer -->
+                <div id="sender-waiting" class="hidden flex-1 flex flex-col items-center justify-center text-center space-y-5" aria-live="polite">
+                    <h2 id="sender-transfer-title" class="text-3xl font-bold text-slate-800">Your code is ready</h2>
+                    <p id="sender-transfer-instructions" class="text-slate-600">On the other device, choose Receive and enter this code.</p>
+                    <div id="code-container" class="bg-slate-100 px-8 py-4 rounded-xl">
+                        <span id="display-code" class="text-5xl font-mono font-bold text-slate-800 tracking-widest"></span>
                     </div>
-                        <div class="flex items-center space-x-2 text-slate-400 animate-pulse">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span class="text-sm">Waiting...</span>
-                    </div>
+                    <p id="transfer-expiry" class="font-semibold text-slate-700"></p>
+                    <p id="transfer-emoji-row" class="text-slate-600">Verification emoji <span id="transfer-emoji" class="text-4xl ml-3 align-middle"></span></p>
+                    <p id="sender-transfer-status" class="text-slate-600">Waiting for receiver. Keep this page open.</p>
+                    <button id="btn-copy-code" class="px-4 py-3 font-semibold text-slate-600">Copy code</button>
+                    <button id="btn-send-again" class="hidden bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold">Send again</button>
                 </div>
 
                 <!-- Approval State -->
@@ -268,7 +259,7 @@
         <!-- Receiver View -->
         <div id="receiver-view"
             class="hidden flex-1 flex flex-col items-center justify-center p-8 w-full max-w-lg mx-auto">
-            <h2 class="text-2xl font-bold text-slate-800 mb-8">Enter code</h2>
+            <h2 id="receiver-heading" class="text-2xl font-bold text-slate-800 mb-8">Enter code</h2>
 
             <div id="join-section" class="w-full space-y-8">
                 <div class="flex justify-center gap-2 md:gap-4 otp-container">
@@ -311,7 +302,7 @@
                     <i class="fas fa-check text-3xl"></i>
                 </div>
                 <div>
-                        <h3 class="text-xl font-bold text-slate-800">Ready</h3>
+                        <h3 id="download-heading" class="text-xl font-bold text-slate-800">Your file is ready</h3>
                         <p class="text-slate-500" id="success-message">Download is ready.</p>
                 </div>
 
@@ -331,6 +322,8 @@
                     class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200 transition-all">
                     Download all
                 </button>
+
+                <button id="btn-finish-transfer" class="hidden px-4 py-3 font-semibold text-slate-600">Finish transfer</button>
 
                 <!-- File List for Receiver -->
                 <div id="receiver-file-list"

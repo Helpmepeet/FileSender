@@ -81,3 +81,12 @@
         overflow: visible;
     }
 }
+
+/* Active transfers use the full card instead of editable upload controls. */
+#sender-view.transfer-active > :first-child { width: 100%; border: 0; }
+#sender-view.transfer-active > :last-child,
+#sender-view.transfer-active > :first-child > h2,
+#sender-view.transfer-active > :first-child > .flex.space-x-1 { display: none; }
+#sender-view.transfer-active #sender-waiting { min-height: 440px; }
+.text-slate-400 { color: #64748b; }
+#receiver-file-list button { min-height: 44px; }

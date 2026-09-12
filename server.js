@@ -57,7 +57,7 @@ app.post('/upload', upload.array('files'), (req, res) => { // Changed to array
     }
 
     const session = sessionManager.createSession(type, payload, emoji, securityEnabled);
-    res.json({ code: session.code, emoji: session.emoji, securityEnabled: session.securityEnabled, type: session.type });
+    res.json({ code: session.code, emoji: session.emoji, securityEnabled: session.securityEnabled, type: session.type, expiresAt: session.createdAt + 5 * 60 * 1000 });
 });
 
 // Metadata Endpoint
@@ -73,6 +73,7 @@ app.get('/session/:code/metadata', (req, res) => {
     // Only return metadata needed after approval.
     const metadata = {
         type: session.type,
+        expiresAt: session.createdAt + 5 * 60 * 1000,
         // Map files to be safe objects if they exist
         files: session.files ? session.files.map((f, i) => ({
             name: f.originalname,
@@ -144,9 +145,7 @@ app.get('/download/:code', (req, res) => {
                 res.status(500).send({ error: err.message });
             });
 
-            archive.on('end', () => {
-                cleanupSession(session);
-            });
+            // Keep files available for retries until Finish transfer or expiry.
 
             archive.pipe(res);
 

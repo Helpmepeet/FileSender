@@ -52,6 +52,7 @@ socket.on('verification-options', (data) => {
     try {
         joinSection.classList.add('hidden');
         receiverVerification.classList.remove('hidden');
+        document.getElementById('receiver-heading').classList.add('hidden');
 
         // Ensure instructions are visible
         const ps = receiverVerification.querySelectorAll('p:not(.status-text)');
@@ -96,6 +97,10 @@ function showView(view) {
 }
 
 function resetViews() {
+    clearInterval(expiryTimer);
+    senderView.classList.remove('transfer-active');
+    document.getElementById('receiver-heading').classList.remove('hidden');
+    document.getElementById('btn-finish-transfer').classList.add('hidden');
     modeSelection.classList.remove('hidden');
     senderView.classList.add('hidden');
     receiverView.classList.add('hidden');
@@ -458,72 +463,16 @@ btnUpload.addEventListener('click', async () => {
 
         socket.emit('register-sender', currentCode);
 
-        // Auto-copy code
-        navigator.clipboard.writeText(currentCode).then(() => {
-            showToast('Code copied to clipboard!', 'success');
-
-            // Existing visual feedback
-            const codeContainer = document.getElementById('code-container');
-            codeContainer.classList.add('copied');
-            const copyLabel = document.getElementById('copy-label');
-            copyLabel.classList.remove('hidden');
-            setTimeout(() => copyLabel.classList.add('visible'), 10);
-            setTimeout(() => {
-                codeContainer.classList.remove('copied');
-                copyLabel.classList.remove('visible');
-                setTimeout(() => copyLabel.classList.add('hidden'), 200);
-            }, 2000);
-        }).catch(err => console.error('Auto-copy failed:', err));
-
-
-
-        const codeContainer = document.getElementById('code-container');
-        const copyIcon = document.getElementById('copy-icon');
-        const copyLabel = document.getElementById('copy-label');
-
-        const COPY_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        const CHECK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-
-        codeContainer.addEventListener('click', () => {
-            if (!currentCode) return;
-
-            // Remove spaces for copying
-            const codeToCopy = currentCode;
-            navigator.clipboard.writeText(codeToCopy).then(() => {
-                // Success State
-                codeContainer.classList.add('copied');
-                copyIcon.innerHTML = CHECK_ICON_SVG;
-                copyLabel.classList.remove('hidden');
-                // Force reflow to enable transition if needed, but class toggle handles it
-                setTimeout(() => copyLabel.classList.add('visible'), 10);
-
-                // Revert after 2 seconds
-                setTimeout(() => {
-                    codeContainer.classList.remove('copied');
-                    copyIcon.innerHTML = COPY_ICON_SVG;
-                    copyLabel.classList.remove('visible');
-                    setTimeout(() => copyLabel.classList.add('hidden'), 200); // Wait for fade out
-                }, 500);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                showError('Failed to copy code');
-            });
-        });
-
-        socket.on('receiver-joined', (data) => {
-            senderWaiting.classList.add('hidden');
-            senderApproval.classList.remove('hidden');
-            senderEmoji.textContent = data.emoji;
-            btnApprove.parentElement.classList.add('hidden');
-        });
-
-        socket.on('verification-success', () => {
-            // Sender side: Verification passed or Auto-approved, transfer starting
-            senderWaiting.classList.add('hidden'); // Ensure waiting screen is hidden
-            senderApproval.classList.remove('hidden'); // Show approval screen
-            senderApproval.innerHTML = '<p>Connected! Sending file...</p>';
-            setTimeout(resetViews, 3000);
-        });
+        senderView.classList.add('transfer-active');
+        document.getElementById('sender-transfer-title').textContent = 'Your code is ready';
+        document.getElementById('sender-transfer-instructions').classList.remove('hidden');
+        document.getElementById('sender-transfer-status').textContent = 'Waiting for receiver. Keep this page open.';
+        document.getElementById('code-container').classList.remove('hidden');
+        document.getElementById('btn-copy-code').classList.remove('hidden');
+        document.getElementById('btn-send-again').classList.add('hidden');
+        document.getElementById('transfer-emoji-row').classList.toggle('hidden', !data.securityEnabled);
+        document.getElementById('transfer-emoji').textContent = data.emoji;
+        startExpiry(data.expiresAt);
     } catch (err) {
         showError(err.message);
         // Re-enable on error
@@ -550,8 +499,8 @@ socket.on('waiting-for-approval', () => {
 });
 
 socket.on('verification-failed', () => {
-    showError('Wrong emoji.');
-    setTimeout(resetViews, 3000);
+    document.getElementById('receiver-status').textContent = 'That emoji does not match. Try again.';
+    document.querySelectorAll('#emoji-grid button').forEach(button => button.disabled = false);
 });
 
 // OTP Input Logic
@@ -613,152 +562,77 @@ btnJoin.addEventListener('click', () => {
 // Duplicate listeners removed
 
 
-socket.on('transfer-approved', (data) => {
-    receiverVerification.classList.add('hidden');
-    downloadSection.classList.remove('hidden');
-
-    // Fetch session metadata to render UI correctly
-    fetch(`/session/${currentCode}/metadata`)
-        .then(res => res.json())
-        .then(metadata => {
-            const type = metadata.type;
-            const p = downloadSection.querySelector('#success-message');
-            const textContentView = document.getElementById('text-content-view');
-            const btnDownload = document.getElementById('btn-download');
-            const receiverFileList = document.getElementById('receiver-file-list');
-
-            // Track downloaded files
-            const downloadedFiles = new Set();
-            const totalFiles = metadata.files ? metadata.files.length : 0;
-
-            // Reset UI
-            textContentView.classList.add('hidden');
-            receiverFileList.classList.add('hidden');
-            btnDownload.classList.remove('hidden');
-
-            if (type === 'text') {
-                p.textContent = 'Text is ready.';
-                textContentView.classList.remove('hidden');
-                document.getElementById('received-text').value = metadata.text;
-                btnDownload.classList.add('hidden'); // Hide download button for text
-
-                // Copy Text Logic
-                const btnCopy = document.getElementById('btn-copy-text');
-                // Remove old listener to avoid duplicates if re-rendering
-                const newBtnCopy = btnCopy.cloneNode(true);
-                btnCopy.parentNode.replaceChild(newBtnCopy, btnCopy);
-
-                newBtnCopy.onclick = () => {
-                    const text = document.getElementById('received-text').value;
-                    navigator.clipboard.writeText(text).then(() => {
-                        showToast('Text copied!', 'success');
-                        // Signal completion for text
-                        socket.emit('complete-session', currentCode);
-                        setTimeout(() => {
-                            resetViews();
-                        }, 1500);
-                    });
-                };
-            } else {
-                // FILE MODE
-                const files = metadata.files || [];
-
-                if (files.length === 1) {
-                    // Single File Mode - cleaner UI
-                    p.textContent = 'Ready: ' + files[0].name;
-                    btnDownload.textContent = 'Download';
-                    btnDownload.onclick = () => {
-                        window.location.href = `/download/${currentCode}`;
-                    };
-                } else {
-                    // Multi File Mode - List + Zip
-                    p.textContent = `${files.length} files ready`;
-                    receiverFileList.classList.remove('hidden');
-                    receiverFileList.innerHTML = '';
-
-                    files.forEach((file, index) => {
-                        const div = document.createElement('div');
-                        div.className = 'flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100';
-
-                        const fileDetails = document.createElement('div');
-                        fileDetails.className = 'flex items-center space-x-3 overflow-hidden';
-
-                        const fileIconContainer = document.createElement('div');
-                        fileIconContainer.className = 'w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center flex-shrink-0';
-                        const fileIcon = document.createElement('i');
-                        fileIcon.className = 'fas fa-file';
-                        fileIconContainer.appendChild(fileIcon);
-
-                        const fileInfo = document.createElement('div');
-                        fileInfo.className = 'min-w-0';
-                        const fileName = document.createElement('p');
-                        fileName.className = 'text-sm font-medium text-slate-700 truncate';
-                        fileName.textContent = file.name;
-                        const fileSize = document.createElement('p');
-                        fileSize.className = 'text-xs text-slate-400';
-                        fileSize.textContent = formatFileSize(file.size);
-                        fileInfo.append(fileName, fileSize);
-
-                        fileDetails.append(fileIconContainer, fileInfo);
-
-                        const downloadButton = document.createElement('button');
-                        downloadButton.id = `btn-dl-${index}`;
-                        downloadButton.className = 'text-blue-500 hover:text-blue-700 font-semibold text-sm px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 transition-colors';
-                        downloadButton.textContent = 'Download';
-
-                        div.append(fileDetails, downloadButton);
-                        receiverFileList.appendChild(div);
-
-                        // Individual Download Listener
-                        downloadButton.onclick = () => {
-                            downloadSingleFile(index);
-                            downloadedFiles.add(index);
-
-                            // Check if all files downloaded
-                            if (downloadedFiles.size === totalFiles) {
-                                // Add delay to ensure download request reaches server
-                                setTimeout(() => {
-                                    socket.emit('complete-session', currentCode);
-                                    setTimeout(() => {
-                                        resetViews();
-                                    }, 1500);
-                                }, 1000);
-                            }
-                        };
-                    });
-
-                    btnDownload.textContent = 'Download all';
-                    btnDownload.onclick = () => {
-                        // Disable button
-                        btnDownload.disabled = true;
-                        btnDownload.textContent = 'Downloading...';
-
-                        // Download each file individually with a small delay
-                        files.forEach((file, index) => {
-                            setTimeout(() => {
-                                downloadSingleFile(index);
-                            }, index * 500); // 500ms delay between downloads
-                        });
-
-                        // Signal completion after last download triggered
-                        setTimeout(() => {
-                            socket.emit('complete-session', currentCode);
-                            resetViews();
-                        }, files.length * 500 + 1000);
-                    };
-                }
+socket.on('transfer-approved', async () => {
+    const code = currentCode;
+    try {
+        const response = await fetch(`/session/${code}/metadata`);
+        if (!response.ok) throw new Error('Transfer expired or unavailable. Ask for a new code.');
+        const metadata = await response.json();
+        if (currentCode !== code) return;
+        joinSection.classList.add('hidden');
+        receiverVerification.classList.add('hidden');
+        document.getElementById('receiver-heading').classList.add('hidden');
+        downloadSection.classList.remove('hidden');
+        const heading = document.getElementById('download-heading');
+        const message = document.getElementById('success-message');
+        const textView = document.getElementById('text-content-view');
+        const list = document.getElementById('receiver-file-list');
+        const finish = document.getElementById('btn-finish-transfer');
+        textView.classList.toggle('hidden', metadata.type !== 'text');
+        btnDownload.classList.toggle('hidden', metadata.type === 'text');
+        list.classList.add('hidden');
+        list.replaceChildren();
+        finish.classList.add('hidden');
+        startExpiry(metadata.expiresAt);
+        if (metadata.type === 'text') {
+            heading.textContent = 'Your text is ready';
+            message.textContent = 'Copy the text, then finish the transfer.';
+            document.getElementById('received-text').value = metadata.text;
+            document.getElementById('btn-copy-text').onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText(metadata.text);
+                    message.textContent = 'Text copied. You can finish the transfer.';
+                    finish.classList.remove('hidden');
+                } catch { showError('Could not copy. Select and copy the text manually.'); }
+            };
+        } else {
+            const files = metadata.files;
+            heading.textContent = files.length === 1 ? 'Your file is ready' : 'Your files are ready';
+            message.textContent = files.length === 1 ? files[0].name : `${files.length} files ready`;
+            const download = (index) => {
+                const link = document.createElement('a');
+                link.href = `/download/${code}${index === undefined ? '' : `?index=${index}`}`;
+                link.download = '';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                heading.textContent = 'Download started';
+                message.textContent = 'Check your Downloads folder. Finish after your downloads are saved.';
+                btnDownload.textContent = files.length === 1 ? 'Download again' : 'Download all again (ZIP)';
+                finish.classList.remove('hidden');
+            };
+            btnDownload.disabled = false;
+            btnDownload.textContent = files.length === 1 ? 'Download file' : 'Download all (ZIP)';
+            btnDownload.onclick = () => download();
+            if (files.length > 1) {
+                list.classList.remove('hidden');
+                files.forEach((file, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between gap-4 p-3';
+                    const name = document.createElement('span');
+                    name.className = 'text-slate-700 break-all';
+                    name.textContent = file.name;
+                    const button = document.createElement('button');
+                    button.className = 'text-blue-600 font-semibold';
+                    button.textContent = 'Download';
+                    button.onclick = () => download(index);
+                    row.append(name, button);
+                    list.append(row);
+                });
             }
-        })
-        .catch(err => {
-            console.error('Metadata fetch error:', err);
-            showError('Could not load transfer.');
-        });
+        }
+    } catch (err) { showError(err.message); btnJoin.classList.remove('hidden'); }
 });
-
-// Helper for single file download
-window.downloadSingleFile = (index) => {
-    window.location.href = `/download/${currentCode}?index=${index}`;
-};
 
 socket.on('transfer-rejected', () => {
     showError('Sender rejected the transfer.');
@@ -770,13 +644,65 @@ socket.on('error', (data) => {
     btnJoin.classList.remove('hidden'); // Show button again on error
 });
 
-// btnDownload listener is now handled dynamically in transfer-approved
-// keeping this for initial state if needed, but overriding above
-btnDownload.addEventListener('click', () => {
-    if (currentCode) {
-        window.location.href = `/download/${currentCode}`;
-    }
-});
-
 // Initialize emoji display
 updateEmojiDisplay();
+
+// One set of handlers for every transfer, including subsequent transfers.
+let expiryTimer;
+function startExpiry(expiresAt) {
+    clearInterval(expiryTimer);
+    const update = () => {
+        const seconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+        document.getElementById('transfer-expiry').textContent = `Expires in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+        if (seconds === 0) {
+            clearInterval(expiryTimer);
+            if (!senderView.classList.contains('hidden')) {
+                document.getElementById('sender-transfer-title').textContent = 'Transfer expired';
+                document.getElementById('sender-transfer-instructions').classList.add('hidden');
+                document.getElementById('transfer-emoji-row').classList.add('hidden');
+                document.getElementById('sender-transfer-status').textContent = 'Send your files again to get a new code.';
+                document.getElementById('code-container').classList.add('hidden');
+                document.getElementById('btn-copy-code').classList.add('hidden');
+                document.getElementById('btn-send-again').classList.remove('hidden');
+            } else {
+                resetViews();
+                showError('Transfer expired. Ask the sender for a new code.');
+            }
+        }
+    };
+    expiryTimer = setInterval(update, 1000);
+    update();
+}
+document.getElementById('btn-copy-code').onclick = async () => {
+    try { await navigator.clipboard.writeText(currentCode); showToast('Code copied!', 'success'); }
+    catch { showError('Could not copy. Use the code shown above.'); }
+};
+document.getElementById('btn-send-again').onclick = () => { resetViews(); showView(senderView); };
+document.getElementById('btn-finish-transfer').onclick = () => {
+    socket.emit('complete-session', currentCode);
+    clearInterval(expiryTimer);
+    btnDownload.classList.add('hidden');
+    document.getElementById('btn-finish-transfer').classList.add('hidden');
+    document.getElementById('text-content-view').classList.add('hidden');
+    document.getElementById('receiver-file-list').classList.add('hidden');
+    document.getElementById('download-heading').textContent = 'Transfer finished';
+    document.getElementById('success-message').textContent = 'You can close this page.';
+};
+socket.on('receiver-joined', () => {
+    document.getElementById('sender-transfer-status').textContent = 'Receiver connected. Match the emoji on the other device.';
+});
+socket.on('verification-success', () => {
+    if (senderView.classList.contains('hidden')) return;
+    document.getElementById('sender-transfer-status').textContent = 'Receiver connected. Your files are ready to download.';
+});
+socket.on('transfer-completed', () => {
+    clearInterval(expiryTimer);
+    document.getElementById('sender-transfer-title').textContent = 'Transfer finished';
+    document.getElementById('sender-transfer-instructions').classList.add('hidden');
+    document.getElementById('transfer-emoji-row').classList.add('hidden');
+    document.getElementById('sender-transfer-status').textContent = 'The receiver finished the transfer. You can close this page.';
+    document.getElementById('transfer-expiry').textContent = '';
+    document.getElementById('code-container').classList.add('hidden');
+    document.getElementById('btn-copy-code').classList.add('hidden');
+    document.getElementById('btn-send-again').classList.remove('hidden');
+});
