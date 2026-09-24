@@ -25,7 +25,7 @@ The local app is then at `http://localhost:3000`. For the published app, deploy 
 
 ## Connect Codex
 
-Choose two existing folders on the agent's machine: one containing files it may send, and one where it may save received files. The example creates narrow folders in your home directory. Run it from the FileSender repository root, replacing that first path with your checkout:
+Choose two folders on the computer that runs this MCP bridge: one containing files it may send, and one where it may save received files. Configure these folders separately on every computer that installs the bridge. The example creates narrow folders in that computer's home directory; it does not set a shared destination for other agents. Run it from the FileSender repository root, replacing that first path with your checkout:
 
 ```sh
 cd /absolute/path/to/FileSender
@@ -62,7 +62,7 @@ Other MCP clients can use a stdio server command with the same settings. For cli
 }
 ```
 
-`FILESENDER_READ_DIRS` and `FILESENDER_WRITE_DIRS` can each contain multiple existing root folders, separated by `:` on macOS/Linux or `;` on Windows. Use private folders that other local users cannot rename or replace while a transfer runs. The bridge may create a requested subfolder inside a write root. `send_text` and receiving text do not need either folder. `send_files` needs a read root; receiving files needs a write root. Optional `FILESENDER_MAX_TOTAL_BYTES` defaults to `104857600` (100 MiB) and can only be set lower. Text is also limited to 1 MiB. `FILESENDER_URL` must be the app's HTTP(S) origin, without a path or embedded credentials.
+`FILESENDER_READ_DIRS` and `FILESENDER_WRITE_DIRS` can each contain multiple existing root folders, separated by `:` on macOS/Linux or `;` on Windows. These paths refer to the bridge's computer, not the hosted FileSender app or the sender's computer. If a session uses a bridge running on another machine, received files are saved on that machine. Use private folders that other local users cannot rename or replace while a transfer runs. The bridge may create a requested subfolder inside a write root. `send_text` and receiving text do not need either folder. `send_files` needs a read root; receiving files needs a write root. Optional `FILESENDER_MAX_TOTAL_BYTES` defaults to `104857600` (100 MiB) and can only be set lower. Text is also limited to 1 MiB. `FILESENDER_URL` must be the app's HTTP(S) origin, without a path or embedded credentials.
 
 ## Use it
 
@@ -77,7 +77,7 @@ The agent sees four tools:
 
 For example, tell the sending agent: “Use FileSender to send the text `Hello`; give me the code and emoji.” Share both with the receiver. Then tell the receiving agent: “Receive FileSender code `1234` with emoji `🚀`, save any files in my FileSender incoming folder, and finish the transfer after you have the text or saved files.” A browser can be either sender or receiver as well.
 
-The receiver must claim the transfer within 5 minutes. A successful claim gives it 30 minutes to download and call `finish_transfer`. If `outputDirectory` is omitted for a file transfer, the first configured write root is used. The receiver handle works only in the MCP process that returned it, so finish before restarting the agent session.
+The receiver must claim the transfer within 5 minutes. A successful claim gives it 30 minutes to download and call `finish_transfer`. For files, `outputDirectory` can select a folder inside a configured write root on the receiver bridge's computer. If omitted, the first configured write root on that computer is used. Without a write root, file receiving fails; text still works. The receiver handle works only in the MCP process that returned it, so finish before restarting the agent session.
 
 ## If setup fails
 

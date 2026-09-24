@@ -180,7 +180,7 @@ async function upload(fields, files = []) {
 function textResult(value) { return { content: [{ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value) }] }; }
 
 const server = new McpServer({ name: 'filesender', version: '0.1.0' }, {
-  instructions: 'FileSender send tools return a four-digit code and emoji; share both with the intended receiver. The receiver must claim within 5 minutes. receive_transfer returns text or saved file paths plus a receiverHandle. After confirming receipt, call finish_transfer with that handle. Finish within 30 minutes of claiming. File paths must stay inside the configured read or write directories.'
+  instructions: 'FileSender send tools return a four-digit code and emoji; share both with the intended receiver. The receiver must claim within 5 minutes. receive_transfer returns text or saves files on the computer running this MCP bridge, inside its configured write directories, then returns saved paths and a receiverHandle. After confirming receipt, call finish_transfer with that handle. Finish within 30 minutes of claiming. File paths must stay inside the configured read or write directories.'
 });
 
 server.tool('send_text', 'Send text through FileSender. Share the returned code and emoji with the receiver within 5 minutes.', {
@@ -222,10 +222,10 @@ server.tool('send_files', 'Send local files inside FILESENDER_READ_DIRS. Share t
   }
 });
 
-server.tool('receive_transfer', 'Claim a transfer with its code and matching emoji. Return text or save files in FILESENDER_WRITE_DIRS, then call finish_transfer with the returned receiverHandle.', {
+server.tool('receive_transfer', 'Claim a transfer with its code and matching emoji. Return text or save files on this MCP bridge\'s computer in FILESENDER_WRITE_DIRS, then call finish_transfer with the returned receiverHandle.', {
   code: z.string().regex(/^\d{4}$/),
   emoji: z.string().min(1).max(32),
-  outputDirectory: z.string().optional()
+  outputDirectory: z.string().optional().describe('Local destination inside FILESENDER_WRITE_DIRS; defaults to the first configured write directory for files')
 }, async ({ code, emoji, outputDirectory: outputInput }) => {
   if (receivers.size + pendingReceives >= MAX_RECEIVERS) throw new Error('Too many active receives');
   pendingReceives += 1;
