@@ -10,13 +10,13 @@ Send files from your phone to a print-shop computer without logging into your em
 
 ## How it works
 
-**Your device:** select files → get a code. **Print-shop computer:** enter the code → match the emoji (optional) → download.
+**Your device:** select files → get a code. **Print-shop computer:** enter the code → match the emoji → download.
 
 ### 1. Choose what to send: on your device
 
 Open the app and choose **Send**. Tap or drag in your files, or switch to **Text** to paste a message or link. You can send multiple files, up to **100 MB total**.
 
-For an extra check, turn on **Verification** and choose an emoji before selecting **Get Code**.
+Choose an emoji before selecting **Get Code**. Emoji verification is required for every transfer.
 
 ![Sender with a sample file selected and emoji verification enabled](docs/images/01-send.jpg)
 
@@ -32,9 +32,9 @@ Open the same app, choose **Receive**, enter the sender’s code, and select **J
 
 ![Receiver with the sender's four-digit code entered](docs/images/03-receive.jpg)
 
-### 4. Match the emoji: if verification is enabled
+### 4. Match the emoji
 
-On the receiving computer, select the emoji shown on your device. In this example, it is the rocket. If verification is off, the app skips this step.
+On the receiving computer, select the emoji shown on your device. In this example, it is the rocket. Verification is required for every transfer.
 
 ![Receiver choosing the matching emoji from a grid of nine options](docs/images/04-verify.jpg)
 
@@ -44,7 +44,11 @@ When the file is ready, select **Download file**, then open it to print. Once yo
 
 ![Receiver showing the sample file ready to download](docs/images/05-download.jpg)
 
-Transfers expire after **5 minutes**, and expired uploads are automatically deleted. Files are stored temporarily on the server; download them promptly.
+You have **5 minutes to join** a transfer. After verification, you have **30 minutes to download and finish** it. Expired uploads are automatically deleted. Files are stored temporarily on the server; download them promptly.
+
+## Use with an agent (MCP)
+
+An agent can send text or local files and receive a transfer through the local FileSender MCP bridge. See [MCP setup](mcp/README.md) for installation, allowed directories, and the four available tools.
 
 ## Run locally
 

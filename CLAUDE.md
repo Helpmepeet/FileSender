@@ -21,11 +21,12 @@ This is a small server-mediated file/text transfer app for short-lived sharing b
 
 ### Runtime shape
 
-- `server.js` is the real backend entrypoint. It serves `public/`, accepts uploads, exposes metadata/download endpoints, owns all Socket.IO events, and performs file cleanup.
+- `server.js` is the real backend entrypoint. It wires the HTTP app, upload middleware, routes, Socket.IO, and expiry cleanup together.
 - `index.js` is only a deployment fallback that requires `server.js`; keep behavior changes in `server.js`.
-- `sessionManager.js` is the in-memory control plane for transfer sessions: 4-digit code generation, emoji verification setup, session lifecycle, and the 5-minute expiry timer.
-- `public/client.js` contains nearly all frontend behavior and view-state transitions for both sender and receiver flows.
-- `public/index.html` is a static shell whose element IDs are tightly coupled to `public/client.js`; DOM changes usually require matching JS updates.
+- `routes/transferRoutes.js` owns upload, metadata, and download HTTP behavior; `realtime/registerTransferSocket.js` owns the Socket.IO event flow.
+- `sessionManager.js` is the in-memory control plane for transfer sessions: 4-digit code generation, emoji verification setup, session lifecycle, a 5-minute claim deadline, and a 30-minute receive deadline. It does not manage disk files.
+- `fileStore.js` owns the temporary upload directory and file deletion, while `cleanupSession.js` performs explicit completion/failure cleanup.
+- `public/js/core.js`, `ui.js`, `sender.js`, and `receiver.js` divide browser state/UI utilities from the two transfer workflows. `public/index.html` is a static shell whose element IDs are tightly coupled to those scripts.
 
 ### Core transfer flow
 
@@ -33,8 +34,8 @@ This is a small server-mediated file/text transfer app for short-lived sharing b
 2. `POST /upload` stores uploaded files in `uploads/` via Multer or stores text directly in memory.
 3. `sessionManager.createSession()` creates a 4-digit code plus the chosen/random security emoji and stores the session in a process-local `Map`.
 4. Sender registers over Socket.IO with `register-sender`; receiver joins with `join-receiver`.
-5. If security mode is enabled, the receiver must choose the correct emoji from server-generated options; otherwise the server auto-approves.
-6. After approval, the receiver fetches `/session/:code/metadata` to determine whether the payload is text, one file, or multiple files.
+5. The receiver must choose the correct emoji from server-generated options. Wrong guesses throttle that claimant without deleting the sender's transfer.
+6. After approval, the browser redeems its Socket.IO grant for a cookie. Metadata and downloads require a receiver grant; the local MCP bridge uses a bearer token instead.
 7. Downloads happen through `/download/:code`: single files use `res.download`, multi-file transfers are zipped on the fly with `archiver`, and text is shown in the UI instead of downloaded as a file.
 8. Cleanup happens on completion or expiry by removing the session from memory and deleting any uploaded temp files.
 
@@ -42,7 +43,7 @@ This is a small server-mediated file/text transfer app for short-lived sharing b
 
 - All transfer state is ephemeral. Sessions live only in memory and uploaded files live only on local disk under `uploads/`.
 - A server restart loses active sessions; this matches the Render deployment and README assumptions about temporary storage.
-- Upload limits are enforced in two places: Multer limits each file to 100 MB in `server.js`, while the frontend limits total selected file size to 100 MB in `public/client.js`.
-- The client and server communicate through named Socket.IO events rather than a richer API layer. When changing transfer behavior, check both `server.js` and `public/client.js` together.
-- There is still legacy manual approval code mixed into the current emoji-based auto-approval flow. Be careful when editing approval logic because some unused handlers and UI fragments remain in place.
+- Upload limits are enforced in multiple places: Multer limits each file to 100 MiB and caps multipart file/field counts in `server.js`; `routes/transferRoutes.js` rejects file transfers over 100 MiB total; the frontend limits total selected file size to 100 MiB in `public/js/sender.js`.
+- The client and server communicate through named Socket.IO events rather than a richer API layer. When changing transfer behavior, check `realtime/registerTransferSocket.js` and the sender/receiver browser scripts together.
+- `mcp/server.js` is a separate local stdio MCP server. Its four tools reuse FileSender's HTTP and Socket.IO flow; install its dependencies from `mcp/package.json`.
 - The frontend is plain HTML/CSS/JS with Tailwind loaded from CDN in `public/index.html`; there is no component framework or build step.

@@ -1,55 +1,28 @@
 # FileSender Architecture & Flow
 
-This document explains how the application handles file transfers, from upload to download.
+FileSender is a short-lived, server-mediated file and text transfer app. It is not peer-to-peer: uploaded files are temporarily held on the Node server, while session state lives in memory.
 
-## Core Concept
-The application acts as a temporary "holding area". It is **not** peer-to-peer in the strict sense (where data goes directly from phone to phone). Instead, it uses the server as a middleman.
+## Transfer flow
 
-## The Workflow
+1. The sender selects files or enters text. `public/js/sender.js` creates a `FormData` request for `POST /upload`.
+2. `routes/transferRoutes.js` uses Multer to put files in `uploads/` (or retains text in memory), then asks `sessionManager.js` to create a four-digit code and required emoji challenge.
+3. Sender and receiver connect through Socket.IO. `realtime/registerTransferSocket.js` coordinates `register-sender`, `join-receiver`, and emoji verification. Approval creates a receiver grant.
+4. Once approved, `public/js/receiver.js` redeems its grant for a cookie and requests `/session/:code/metadata`. The MCP bridge uses a bearer grant. Both routes require receiver authorization. The browser renders text for copying, one file for downloading, or individual and ZIP options for multiple files.
+5. `/download/:code` streams an individual file or creates the ZIP on demand. Files remain available for additional downloads until the receiver selects **Finish transfer** or the transfer expires.
+6. `cleanupSession.js` removes completed sessions and delegates uploaded-file deletion to `fileStore.js`. A transfer must be claimed within five minutes; successful verification starts a 30-minute receive lease. `sessionManager.js` invokes cleanup on expiry.
 
-### 1. The Upload (Sender)
-1.  **User Action**: User selects a file and clicks "Get Code".
-2.  **Frontend (`client.js`)**:
-    *   Creates a `FormData` object containing the file.
-    *   Sends a `POST` request to `/upload`.
-3.  **Backend (`server.js`)**:
-    *   Uses `multer` middleware to receive the file.
-    *   Saves the file to the local `uploads/` folder with a unique ID (UUID).
-    *   **Session Creation**: Calls `sessionManager.createSession()`.
-        *   Generates a random **4-digit PIN** (e.g., `1234`).
-        *   Stores the file path, original name, and PIN in memory (`sessions` Map).
-    *   Returns the PIN to the frontend.
-4.  **Result**: The file is now sitting on the server, waiting for the PIN to be used.
+## Modules
 
-### 2. The Connection (Receiver)
-1.  **User Action**: Receiver enters the 4-digit PIN.
-2.  **Frontend (`client.js`)**:
-    *   Connects via `Socket.io` (real-time connection).
-    *   Emits a `join-receiver` event with the PIN.
-3.  **Backend (`server.js`)**:
-    *   Checks if a session exists for that PIN.
-    *   If valid, it links the Receiver and Sender via a socket room.
-    *   (Optional) If verification is on, it triggers the emoji security check.
-
-### 3. The Download (Receiver)
-1.  **Trigger**: Once connected (and verified), the server tells the frontend "Transfer Approved".
-2.  **Frontend**: Automatically redirects the browser to `/download/:code`.
-3.  **Backend**:
-    *   Looks up the file path using the PIN.
-    *   Streams the file from the `uploads/` folder to the Receiver's browser.
-    *   **Cleanup**: Immediately **deletes** the file from the `uploads/` folder after the download starts (to save space and privacy).
-    *   Removes the session from memory.
-
-## Key Components
-
-| File | Purpose |
+| Area | Responsibility |
 | :--- | :--- |
-| `server.js` | The web server. Handles HTTP requests (upload/download) and Socket.io events. |
-| `sessionManager.js` | The "Brain". Keeps track of active codes (PINs) and which file belongs to which PIN. |
-| `uploads/` | A temporary folder on the server where files live for a few minutes. |
+| `server.js` | Runtime entrypoint: configures Express, Socket.IO, uploads, routes, and expiry cleanup. |
+| `config.js` | Shared transfer duration, upload/verification limits, and verification emojis. |
+| `routes/transferRoutes.js` | Upload, approved-transfer metadata, and download HTTP endpoints. |
+| `realtime/registerTransferSocket.js` | Sender/receiver Socket.IO coordination and verification. |
+| `sessionManager.js` | In-memory sessions, codes, emoji choices, and expiry timers. |
+| `fileStore.js` / `cleanupSession.js` | Temporary upload directory and cleanup of uploaded files/sessions. |
+| `public/js/` | Shared browser state/UI plus separate sender and receiver workflows. |
 
-## Why Render "Ephemeral" Storage Matters
-Since you are using Render's free tier:
-*   The `uploads/` folder is **temporary**.
-*   If the server "sleeps" (spins down) or restarts, all files in `uploads/` are wiped.
-*   This is why files might disappear if you wait too long, but for quick transfers, it works perfectly.
+## Render storage
+
+Render's local filesystem is ephemeral. A restart loses active in-memory sessions and may remove temporary uploads. This matches FileSender's short-lived transfer model; users should download promptly.
