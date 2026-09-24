@@ -6,8 +6,6 @@ Send files from your phone to a print-shop computer without logging into your em
 
 ![FileSender home screen with Send and Receive options](docs/images/app.jpg)
 
-*The app displays the name QuickBridge.*
-
 ## How it works
 
 **Your device:** select files → get a code. **Print-shop computer:** enter the code → match the emoji → download.

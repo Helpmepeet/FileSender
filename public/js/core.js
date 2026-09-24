@@ -35,6 +35,7 @@
             fileList: byId('file-list'),
             fileCount: byId('file-count'),
             totalSize: byId('total-size'),
+            btnAddFiles: byId('btn-add-files'),
             btnClearFiles: byId('btn-clear-files'),
             selectedEmoji: byId('selected-emoji-display'),
             emojiSelector: byId('emoji-selector'),

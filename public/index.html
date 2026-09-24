@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickBridge Personal</title>
+    <title>FileSender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -36,13 +36,12 @@
         class="container max-w-4xl w-full bg-white rounded-2xl md:rounded-3xl shadow-xl overflow-hidden min-h-[85vh] md:min-h-[600px] flex flex-col relative">
 
         <!-- Header / Navigation -->
-        <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10 pointer-events-none">
+        <div class="absolute top-0 left-0 w-full p-6 flex justify-start items-center z-10 pointer-events-none">
             <div class="pointer-events-auto">
                 <button id="btn-back-global" class="text-slate-400 hover:text-slate-600 transition-colors hidden">
                     <i class="fas fa-arrow-left mr-2"></i> Back
                 </button>
             </div>
-            <div class="text-slate-300 font-bold text-xl select-none">QuickBridge</div>
         </div>
 
         <!-- Status Message Toast -->
@@ -105,10 +104,9 @@
                     <!-- File Input View -->
                     <div id="view-file-input"
                         class="absolute inset-0 flex flex-col transition-all duration-300 transform translate-x-0">
+                        <input type="file" id="file-input" class="hidden" multiple>
                         <div id="drop-zone"
                             class="flex-1 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center p-8 group relative overflow-hidden">
-                            <input type="file" id="file-input" class="hidden" multiple>
-
                             <div class="z-10 flex flex-col items-center text-center space-y-4">
                                 <div
                                     class="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -140,6 +138,10 @@
                             <div id="file-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                                 <!-- File items injected here -->
                             </div>
+                            <button id="btn-add-files" type="button"
+                                class="mt-3 flex-shrink-0 w-full rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500">
+                                <i class="fas fa-plus mr-2" aria-hidden="true"></i>Add more files
+                            </button>
                         </div>
                     </div>
 

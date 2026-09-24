@@ -4,7 +4,7 @@
 
 1. Overview
 
-System name: QuickBridge Personal
+System name: FileSender
 
 Goal:
 Allow two people to send files between any two devices through a website, using:

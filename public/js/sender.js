@@ -2,6 +2,7 @@
     const FS = window.FileSender;
     const { elements: el, state, emojis } = FS;
     const MAX_TOTAL_SIZE = 100 * 1024 * 1024;
+    const MAX_FILES = 100;
 
     function updateEmojiDisplay() {
         el.selectedEmoji.textContent = emojis[state.currentEmojiIndex];
@@ -89,6 +90,7 @@
 
     function addFiles(files) {
         const newFiles = Array.from(files || []);
+        if (state.selectedFiles.length + newFiles.length > MAX_FILES) return FS.ui.showError('Max 100 files per transfer');
         const totalSize = [...state.selectedFiles, ...newFiles].reduce((sum, file) => sum + file.size, 0);
         if (totalSize > MAX_TOTAL_SIZE) return FS.ui.showError('Max total size is 100 MB');
         state.selectedFiles.push(...newFiles);
@@ -150,8 +152,12 @@
             el.dropZone.addEventListener('dragover', (event) => { event.preventDefault(); el.dropZone.classList.add('drag-over'); });
             el.dropZone.addEventListener('dragleave', () => el.dropZone.classList.remove('drag-over'));
             el.dropZone.addEventListener('drop', (event) => { event.preventDefault(); el.dropZone.classList.remove('drag-over'); addFiles(event.dataTransfer.files); });
-            el.fileInput.addEventListener('change', () => addFiles(el.fileInput.files));
-            el.btnClearFiles.addEventListener('click', () => { state.selectedFiles = []; renderFileList(); });
+            el.fileInput.addEventListener('change', () => {
+                addFiles(el.fileInput.files);
+                el.fileInput.value = '';
+            });
+            el.btnAddFiles.addEventListener('click', () => el.fileInput.click());
+            el.btnClearFiles.addEventListener('click', () => { state.selectedFiles = []; el.fileInput.value = ''; renderFileList(); });
             document.getElementById('btn-prev-emoji').addEventListener('click', () => { state.currentEmojiIndex = (state.currentEmojiIndex - 1 + emojis.length) % emojis.length; updateEmojiDisplay(); });
             document.getElementById('btn-next-emoji').addEventListener('click', () => { state.currentEmojiIndex = (state.currentEmojiIndex + 1) % emojis.length; updateEmojiDisplay(); });
             el.securityToggle.addEventListener('change', updateSecurityState);
@@ -175,6 +181,9 @@
             state.selectedFiles = [];
             el.fileInput.value = '';
             el.textInput.value = '';
+            const nextEmojiIndex = Math.floor(Math.random() * (emojis.length - 1));
+            state.currentEmojiIndex = nextEmojiIndex >= state.currentEmojiIndex ? nextEmojiIndex + 1 : nextEmojiIndex;
+            updateEmojiDisplay();
             el.btnUpload.disabled = false;
             el.btnUpload.textContent = 'Get code';
             el.uploadSection.classList.remove('hidden');
