@@ -17,7 +17,7 @@ This file provides guidance to Cat Code when working with code in this repositor
 
 ## Production deployment
 
-- The production site is [https://filesender-2iwa.onrender.com/](https://filesender-2iwa.onrender.com/). It runs on **Render**, not Vercel.
+- The production site is [https://filesender-2iwa.onrender.com/](https://filesender-2iwa.onrender.com/).
 - Production deployment is **manual**: the user deploys the desired GitHub commit from the Render website. A GitHub push alone does not make a change live.
 - Agents may prepare, commit, and push code when authorized, but must leave the Render dashboard deployment to the user. Report the pushed commit SHA so the user can select or verify it in Render.
 - After a push, describe the change as pushed, not deployed. Check the production site only after the user says they have deployed, or if they explicitly request a live verification.
