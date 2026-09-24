@@ -29,3 +29,7 @@ This guide explains how to deploy your application to the cloud for free using R
 Render will build your app and give you a URL (e.g., `https://filesender.onrender.com`).
 - **Note**: The free tier puts the server to "sleep" after 15 minutes of inactivity. The first request after sleep might take 30-60 seconds.
 - **Warning**: Files uploaded to the server **will be deleted** if the server restarts or sleeps. This is expected behavior for the free tier.
+
+## Deploy later updates
+
+This project's live site is [https://filesender-2iwa.onrender.com/](https://filesender-2iwa.onrender.com/). To release a code change, push its commit to GitHub, then manually deploy that commit from the Render website. The user performs the Render dashboard deployment; a GitHub push alone does not update the live site.

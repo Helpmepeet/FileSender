@@ -15,6 +15,13 @@ This file provides guidance to Cat Code when working with code in this repositor
 - There is no configured test runner and no single-test command today.
 - Deployment is configured for Render via `render.yaml`, with `npm install` as the build step and `node server.js` as the start command.
 
+## Production deployment
+
+- The production site is [https://filesender-2iwa.onrender.com/](https://filesender-2iwa.onrender.com/). It runs on **Render**, not Vercel.
+- Production deployment is **manual**: the user deploys the desired GitHub commit from the Render website. A GitHub push alone does not make a change live.
+- Agents may prepare, commit, and push code when authorized, but must leave the Render dashboard deployment to the user. Report the pushed commit SHA so the user can select or verify it in Render.
+- After a push, describe the change as pushed, not deployed. Check the production site only after the user says they have deployed, or if they explicitly request a live verification.
+
 ## Architecture overview
 
 This is a small server-mediated file/text transfer app for short-lived sharing between two browsers. Despite the README describing the UX as simple browser-to-browser transfer, the implementation is not peer-to-peer: uploads go to the Node server, session state lives in memory, and download approval/coordination happens over Socket.IO.
